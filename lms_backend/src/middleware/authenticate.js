@@ -40,6 +40,10 @@ function authenticate(req, res, next) {
       user_id: decoded.user_id,
       role:    decoded.role,
       email:   decoded.email,
+<<<<<<< HEAD
+      lead_id: decoded.lead_id, // Pass-through for wizard tokens (lead_registrant role)
+=======
+>>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
     };
 
     next();

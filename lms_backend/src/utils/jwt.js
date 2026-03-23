@@ -9,11 +9,40 @@
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 
+<<<<<<< HEAD
+const fs = require('fs');
+const path = require('path');
+
+// ---------------------------------------------------------------------------
+// Key loading — Read from file paths or environment variables.
+// ---------------------------------------------------------------------------
+let PRIVATE_KEY;
+let PUBLIC_KEY;
+
+try {
+  if (process.env.JWT_PRIVATE_KEY_PATH) {
+    const privateKeyPath = path.resolve(process.env.JWT_PRIVATE_KEY_PATH);
+    PRIVATE_KEY = fs.readFileSync(privateKeyPath, 'utf8');
+  } else {
+    PRIVATE_KEY = process.env.JWT_PRIVATE_KEY?.replace(/\\n/g, '\n');
+  }
+
+  if (process.env.JWT_PUBLIC_KEY_PATH) {
+    const publicKeyPath = path.resolve(process.env.JWT_PUBLIC_KEY_PATH);
+    PUBLIC_KEY = fs.readFileSync(publicKeyPath, 'utf8');
+  } else {
+    PUBLIC_KEY = process.env.JWT_PUBLIC_KEY?.replace(/\\n/g, '\n');
+  }
+} catch (err) {
+  console.error('Error loading JWT RSA keys:', err.message);
+}
+=======
 // ---------------------------------------------------------------------------
 // Key loading — newlines are stored as literal "\n" in .env, restore them.
 // ---------------------------------------------------------------------------
 const PRIVATE_KEY = process.env.JWT_PRIVATE_KEY?.replace(/\\n/g, '\n');
 const PUBLIC_KEY  = process.env.JWT_PUBLIC_KEY?.replace(/\\n/g, '\n');
+>>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
 
 const ACCESS_TOKEN_EXPIRY = process.env.JWT_ACCESS_EXPIRY
   ? `${process.env.JWT_ACCESS_EXPIRY}s`   // e.g. "900s" → 15 minutes
@@ -68,4 +97,33 @@ function verifyAccessToken(token) {
   });
 }
 
+<<<<<<< HEAD
+// ---------------------------------------------------------------------------
+// generateWizardToken({ user_id, role, email, lead_id })
+// ---------------------------------------------------------------------------
+// Issues a short-lived (4 h) access JWT for a converted lead filling in the
+// registration wizard. Role is always 'lead_registrant' — this role only exists
+// in JWTs, not in the PostgreSQL user_role ENUM.
+// No refresh token is issued — the link is one-time use only.
+// ---------------------------------------------------------------------------
+function generateWizardToken({ user_id, role, email, lead_id }) {
+  if (!PRIVATE_KEY) {
+    throw new Error('JWT_PRIVATE_KEY is not configured');
+  }
+
+  return jwt.sign(
+    { user_id, role, email, lead_id },
+    PRIVATE_KEY,
+    {
+      algorithm: 'RS256',
+      expiresIn: '4h',
+      issuer:    'acadeno-lms',
+      subject:   String(lead_id),
+    }
+  );
+}
+
+module.exports = { generateTokens, verifyAccessToken, generateWizardToken };
+=======
 module.exports = { generateTokens, verifyAccessToken };
+>>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906

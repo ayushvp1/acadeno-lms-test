@@ -9,7 +9,17 @@
 const crypto = require('crypto');
 const { pool } = require('../db/index');
 const { lookupPinCode } = require('../services/pinCodeService');
+<<<<<<< HEAD
+const { 
+  sendPaymentLinkEmail, 
+  sendWelcomeCredentialsEmail,
+  sendEnrollmentSuccessEmail
+} = require('../services/emailService');
+const { generateTokens } = require('../utils/jwt');
+const redis = require('../utils/redis');
+=======
 const { sendPaymentLinkEmail } = require('../services/emailService');
+>>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
 const { getUploadedFilePath } = require('../services/fileService');
 const bcrypt = require('bcrypt');
 
@@ -21,6 +31,18 @@ const ADULT_AGE = 18;
 const GST_RATE = 0.18;
 const BCRYPT_ROUNDS = 12;
 
+<<<<<<< HEAD
+// Refresh token cookie options (matches authController)
+const REFRESH_COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure:   process.env.NODE_ENV === 'production',
+  sameSite: 'strict',
+  path:     '/api/auth', // Important: must match the refresh route mount point
+  maxAge:   (parseInt(process.env.JWT_REFRESH_EXPIRY, 10) || 604800) * 1000,
+};
+
+=======
+>>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
 // ---------------------------------------------------------------------------
 // Helper: calculate age from DOB
 // ---------------------------------------------------------------------------
@@ -128,13 +150,28 @@ async function createDraft(req, res) {
     // ---- Generate registration number ----
     const registrationNumber = generateRegistrationNumber();
 
+<<<<<<< HEAD
+    // ---- Resolve lead_id ----
+    // For converted leads (lead_registrant role), the lead_id is embedded in the
+    // wizard JWT so they cannot forge a different lead's ID.  For staff users, it
+    // may optionally be supplied in the request body.
+    const effectiveLeadId = req.user.role === 'lead_registrant'
+      ? req.user.lead_id
+      : (lead_id || null);
+
+=======
+>>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
     // ---- Insert draft ----
     const result = await client.query(
       `INSERT INTO registration_drafts
          (registration_number, personal_details, registered_by, lead_id, status)
        VALUES ($1, $2, $3, $4, 'draft')
        RETURNING id, registration_number, created_at`,
+<<<<<<< HEAD
+      [registrationNumber, JSON.stringify(personalDetails), req.user.user_id, effectiveLeadId]
+=======
       [registrationNumber, JSON.stringify(personalDetails), req.user.user_id, lead_id || null]
+>>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
     );
 
     return res.status(201).json({
@@ -225,12 +262,24 @@ async function updatePersonal(req, res) {
       personalDetails.profile_photo_path = getUploadedFilePath(req.file);
     }
 
+<<<<<<< HEAD
+    const effectiveLeadId = req.user.role === 'lead_registrant' ? req.user.lead_id : null;
+
+    await client.query(
+      `UPDATE registration_drafts
+          SET personal_details = $1,
+              lead_id = COALESCE(lead_id, $2),
+              updated_at = NOW()
+        WHERE id = $3`,
+      [JSON.stringify(personalDetails), effectiveLeadId, id]
+=======
     await client.query(
       `UPDATE registration_drafts
           SET personal_details = $1,
               updated_at       = NOW()
         WHERE id = $2`,
       [JSON.stringify(personalDetails), id]
+>>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
     );
 
     return res.status(200).json({ message: 'Personal details updated' });
@@ -312,12 +361,24 @@ async function updateAddress(req, res) {
       pan_number:     pan_number || null,
     };
 
+<<<<<<< HEAD
+    const effectiveLeadId = req.user.role === 'lead_registrant' ? req.user.lead_id : null;
+
+    await client.query(
+      `UPDATE registration_drafts
+          SET address_documents = $1,
+              lead_id = COALESCE(lead_id, $2),
+              updated_at        = NOW()
+        WHERE id = $3`,
+      [JSON.stringify(addressDocuments), effectiveLeadId, id]
+=======
     await client.query(
       `UPDATE registration_drafts
           SET address_documents = $1,
               updated_at        = NOW()
         WHERE id = $2`,
       [JSON.stringify(addressDocuments), id]
+>>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
     );
 
     return res.status(200).json({ message: 'Address and documents updated' });
@@ -387,12 +448,24 @@ async function updateAcademic(req, res) {
       academic.marksheet_path = getUploadedFilePath(req.file);
     }
 
+<<<<<<< HEAD
+    const effectiveLeadId = req.user.role === 'lead_registrant' ? req.user.lead_id : null;
+
+    await client.query(
+      `UPDATE registration_drafts
+          SET academic = $1,
+              lead_id = COALESCE(lead_id, $2),
+              updated_at = NOW()
+        WHERE id = $3`,
+      [JSON.stringify(academic), effectiveLeadId, id]
+=======
     await client.query(
       `UPDATE registration_drafts
           SET academic   = $1,
               updated_at = NOW()
         WHERE id = $2`,
       [JSON.stringify(academic), id]
+>>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
     );
 
     return res.status(200).json({ message: 'Academic details updated' });
@@ -494,12 +567,24 @@ async function updateCourse(req, res) {
       total_fee:   totalFee,
     };
 
+<<<<<<< HEAD
+    const effectiveLeadId = req.user.role === 'lead_registrant' ? req.user.lead_id : null;
+
+    await client.query(
+      `UPDATE registration_drafts
+          SET course_batch = $1,
+              lead_id = COALESCE(lead_id, $2),
+              updated_at = NOW()
+        WHERE id = $3`,
+      [JSON.stringify(courseBatch), effectiveLeadId, id]
+=======
     await client.query(
       `UPDATE registration_drafts
           SET course_batch = $1,
               updated_at   = NOW()
         WHERE id = $2`,
       [JSON.stringify(courseBatch), id]
+>>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
     );
 
     return res.status(200).json({
@@ -591,19 +676,54 @@ async function submitRegistration(req, res) {
       const ac = draft.academic;
       const cb = draft.course_batch;
 
+<<<<<<< HEAD
+      // 1. Create user account
+      // Use user-provided password if available (e.g., from wizard final step), 
+      // else auto-generate a secure temporary one.
+      let finalPassword = req.body.password;
+      let isAutoGenerated = !finalPassword;
+
+      if (isAutoGenerated) {
+        finalPassword = crypto.randomBytes(16).toString('hex');
+      } else {
+        // Simple complexity check if user provides it
+        if (finalPassword.length < 8) {
+          await client.query('ROLLBACK');
+          return res.status(400).json({ error: 'Password must be at least 8 characters' });
+        }
+      }
+
+      const passwordHash = await bcrypt.hash(finalPassword, BCRYPT_ROUNDS);
+
+      // Use xmax trick: xmax = 0 means the row was freshly INSERTed;
+      // xmax > 0 means ON CONFLICT triggered an UPDATE (existing user).
+      // We only send welcome credentials when a brand-new account is created.
+=======
       // 1. Create user account (role = student, random temporary password)
       const tempPassword = crypto.randomBytes(16).toString('hex');
       const passwordHash = await bcrypt.hash(tempPassword, BCRYPT_ROUNDS);
 
+>>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
       const userResult = await client.query(
         `INSERT INTO users (email, password_hash, role, is_active, mfa_enabled)
          VALUES ($1, $2, 'student', TRUE, FALSE)
          ON CONFLICT (email) DO UPDATE SET updated_at = NOW()
+<<<<<<< HEAD
+         RETURNING id, (xmax = 0) AS is_new_user`,
+=======
          RETURNING id`,
+>>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
         [pd.email, passwordHash]
       );
 
       const userId = userResult.rows[0].id;
+<<<<<<< HEAD
+      
+      // Store temporary password in Redis for 24 hours so it can be sent after payment
+      // Key format: temp_password:{user_id}
+      await redis.set(`temp_password:${userId}`, finalPassword, 'EX', 86400);
+=======
+>>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
 
       // 2. Create students record
       const studentResult = await client.query(
@@ -665,6 +785,61 @@ async function submitRegistration(req, res) {
         [id]
       );
 
+<<<<<<< HEAD
+      // 5b. Update Lead Status if applicable
+      if (draft.lead_id) {
+        await client.query(
+          `UPDATE leads SET status = 'registration_completed', last_activity_at = NOW() WHERE id = $1`,
+          [draft.lead_id]
+        );
+        await client.query(
+          `INSERT INTO lead_status_history (lead_id, changed_by, from_status, to_status, reason)
+           VALUES ($1, $2, 'converted', 'registration_completed', 'Student Registration Submitted')`,
+          [draft.lead_id, req.user.user_id]
+        );
+      }
+
+      // ---- Commit transaction ----
+      await client.query('COMMIT');
+
+      const loginUrl   = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/login`;
+      const paymentUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment/${enrollmentId}`;
+      const isNewUser  = userResult.rows[0].is_new_user;
+
+      // 6a. Fire-and-forget: send payment link email only
+      // Login credentials will be sent after successful payment
+      sendPaymentLinkEmail(pd.email, pd.first_name, paymentUrl, draft.registration_number).catch((err) => {
+        console.error('Failed to send payment link email:', err.message);
+      });
+
+      // 6c. Invalidate the one-time invite token from Redis (if this was a lead-originated
+      //     registration).  Both the forward key (token → data) and the reverse lookup
+      //     (lead_id → token) are deleted so the link cannot be reused.
+      if (draft.lead_id) {
+        try {
+          const inviteToken = await redis.get(`reg:lead_invite:${draft.lead_id}`);
+          if (inviteToken) {
+            await redis.del(`reg:invite:${inviteToken}`);
+            await redis.del(`reg:lead_invite:${draft.lead_id}`);
+          }
+        } catch (redisErr) {
+          console.error('Failed to invalidate invite token:', redisErr.message);
+        }
+      }
+
+      // 6d. Update Redis Caches (per requirements)
+      try {
+        if (draft.lead_id) {
+          await redis.set(`lead_status:${draft.lead_id}`, 'registration_completed', 'EX', 86400); // 1 day
+        }
+        await redis.set(`student_profile:${studentId}`, JSON.stringify(pd), 'EX', 86400);
+        await redis.set(`payment_status:${enrollmentId}`, 'pending_payment', 'EX', 86400);
+      } catch (redisErr) {
+        console.error('Redis cache error:', redisErr.message);
+      }
+
+      // TODO: SMS (Twilio/MSG91) — send payment link via SMS alongside email
+=======
       // ---- Commit transaction ----
       await client.query('COMMIT');
 
@@ -674,12 +849,35 @@ async function submitRegistration(req, res) {
         console.error('Failed to send payment link email:', err.message);
       });
       // TODO: SMS (Twilio/MSG91) — Send payment link via SMS alongside email
+>>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
 
       return res.status(201).json({
         message:             'Registration submitted successfully',
         registration_number: draft.registration_number,
         student_id:          studentId,
         enrollment_id:       enrollmentId,
+<<<<<<< HEAD
+        credentials_sent:    isNewUser,  // Let the frontend know if a credentials email was sent
+      });
+    } catch (txErr) {
+      await client.query('ROLLBACK');
+      console.error('SUBMIT REGISTRATION ERROR (Transaction):', txErr.message);
+      console.error('STACK:', txErr.stack);
+      return res.status(500).json({
+        error: 'Internal server error',
+        details: txErr.message,
+        stack: process.env.NODE_ENV === 'development' ? txErr.stack : undefined
+      });
+    }
+  } catch (err) {
+    console.error('SUBMIT REGISTRATION ERROR (Outer):', err.message);
+    console.error('STACK:', err.stack);
+    return res.status(500).json({
+      error: 'Internal server error',
+      details: err.message,
+      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    });
+=======
       });
     } catch (txErr) {
       await client.query('ROLLBACK');
@@ -689,6 +887,7 @@ async function submitRegistration(req, res) {
     console.error('SUBMIT REGISTRATION ERROR:', err.message);
     console.error('STACK:', err.stack);
     return res.status(500).json({ error: 'Internal server error' });
+>>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
   } finally {
     client.release();
   }
@@ -840,6 +1039,14 @@ async function getRegistration(req, res) {
       return res.status(403).json({ error: 'Insufficient permissions', code: 'FORBIDDEN' });
     }
 
+<<<<<<< HEAD
+    // ---- Guest (Lead) can only see their own registration ----
+    if (req.user.role === 'lead_registrant' && String(draft.lead_id) !== String(req.user.lead_id)) {
+      return res.status(403).json({ error: 'Insufficient permissions (Lead mismatch)', code: 'FORBIDDEN' });
+    }
+
+=======
+>>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
     return res.status(200).json(draft);
   } catch (err) {
     console.error('GET REGISTRATION ERROR:', err.message);
@@ -871,6 +1078,17 @@ async function editRegistration(req, res) {
 
     const draft = draftResult.rows[0];
 
+<<<<<<< HEAD
+    // ---- Authorization Check ----
+    if (req.user.role === 'bda' && draft.registered_by !== req.user.user_id) {
+      return res.status(403).json({ error: 'Insufficient permissions', code: 'FORBIDDEN' });
+    }
+    if (req.user.role === 'lead_registrant' && String(draft.lead_id) !== String(req.user.lead_id)) {
+      return res.status(403).json({ error: 'Insufficient permissions (Lead mismatch)', code: 'FORBIDDEN' });
+    }
+
+=======
+>>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
     // ---- Status-based edit lock (US-REG-08) ----
     if (draft.status === 'active' && req.user.role !== 'super_admin') {
       return res.status(403).json({
@@ -967,6 +1185,274 @@ async function editRegistration(req, res) {
   }
 }
 
+<<<<<<< HEAD
+// ---------------------------------------------------------------------------
+// POST /api/registration/payment-webhook
+// Payment success webhook handler
+// ---------------------------------------------------------------------------
+async function handlePaymentSuccess(req, res) {
+  const client = await pool.connect();
+  await client.query("SET app.current_user_role = 'super_admin'");
+
+  try {
+    const { enrollment_id } = req.body;
+    if (!enrollment_id) return res.status(400).json({ error: 'enrollment_id is required' });
+
+    await client.query('BEGIN');
+
+    // Update enrollment status to active
+    const enrollRes = await client.query(
+      `UPDATE enrollments SET status = 'active', updated_at = NOW() WHERE id = $1 RETURNING student_id`,
+      [enrollment_id]
+    );
+
+    if (enrollRes.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Enrollment not found' });
+    }
+
+    const studentId = enrollRes.rows[0].student_id;
+
+    // Get the student to check if there is a lead_id
+    const studentRes = await client.query(
+      `SELECT s.lead_id, s.registered_by, s.first_name, s.email, rd.course_batch, rd.personal_details 
+       FROM students s 
+       LEFT JOIN registration_drafts rd ON s.registration_number = rd.registration_number 
+       WHERE s.id = $1`, 
+      [studentId]
+    );
+
+    const leadId = studentRes.rows[0]?.lead_id;
+    const registeredBy = studentRes.rows[0]?.registered_by;
+    const studentFirstName = studentRes.rows[0]?.first_name;
+    const studentEmail = studentRes.rows[0]?.email;
+    const courseBatch = studentRes.rows[0]?.course_batch;
+    const pd = studentRes.rows[0]?.personal_details;
+
+    if (leadId && registeredBy) {
+      // Update lead status to onboarded
+      await client.query(
+        `UPDATE leads SET status = 'onboarded', last_activity_at = NOW() WHERE id = $1`,
+        [leadId]
+      );
+      // History event
+      await client.query(
+        `INSERT INTO lead_status_history (lead_id, changed_by, from_status, to_status, reason)
+         VALUES ($1, $2, 'registration_completed', 'onboarded', 'Payment Successful')`,
+        [leadId, registeredBy]
+      );
+    }
+    // Fetch student's user record for token generation
+    const userRes = await client.query(
+      `SELECT u.id, u.role, u.email 
+       FROM users u 
+       JOIN students s ON u.id = s.user_id 
+       WHERE s.id = $1`,
+      [studentId]
+    );
+
+    let tokens = null;
+    if (userRes.rows.length > 0) {
+      const studentUser = userRes.rows[0];
+      if (studentUser.id && studentUser.role && studentUser.email) {
+        tokens = generateTokens({
+          id: studentUser.id,
+          role: studentUser.role,
+          email: studentUser.email
+        });
+        
+        // Use res.cookie to set the refreshToken so AuthProvider's /api/auth/me can work
+        res.cookie('refreshToken', tokens.refreshToken, REFRESH_COOKIE_OPTIONS);
+      }
+    }
+
+    await client.query('COMMIT');
+
+    // Send Enrollment Success Email with credentials (Fire-and-forget)
+    if (studentEmail) {
+      const logUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/login`;
+      const courseName = courseBatch?.course_name || 'your chosen course';
+      
+      // Retrieve the temporary password from Redis
+      let tempPassword = '';
+      try {
+        const userRes = await client.query(
+          `SELECT u.id FROM users u JOIN students s ON u.id = s.user_id WHERE s.id = $1`,
+          [studentId]
+        );
+        if (userRes.rows.length > 0) {
+          const userId = userRes.rows[0].id;
+          tempPassword = await redis.get(`temp_password:${userId}`);
+          // Clean up the temporary password from Redis after retrieving it
+          if (tempPassword) {
+            await redis.del(`temp_password:${userId}`);
+          }
+        }
+      } catch (redisErr) {
+        console.error('Failed to retrieve temporary password:', redisErr.message);
+      }
+      
+      sendEnrollmentSuccessEmail(studentEmail, studentFirstName, courseName, logUrl, tempPassword || '').catch(err => {
+        console.error('Failed to send enrollment success email:', err.message);
+      });
+    }
+
+    // Update Redis cache keys (non-blocking)
+    try {
+      if (leadId) {
+        await redis.set(`lead_status:${leadId}`, 'onboarded', 'EX', 86400).catch(()=>{}); 
+      }
+      await redis.set(`payment_status:${enrollment_id}`, 'paid', 'EX', 86400).catch(()=>{});
+      if (pd) {
+        await redis.set(`student_profile:${studentId}`, JSON.stringify(pd), 'EX', 86400).catch(()=>{});
+      }
+    } catch (redisErr) {
+      console.error('Redis update error:', redisErr.message);
+    }
+
+    return res.status(200).json({ 
+      success: true,
+      message: 'Payment success registered', 
+      student_id: studentId,
+      accessToken: tokens?.accessToken,
+      refreshToken: tokens?.refreshToken
+    });
+  } catch (err) {
+    if (client) await client.query('ROLLBACK');
+    console.error('PAYMENT WEBHOOK ERROR:', err.message);
+    console.error('Stack:', err.stack);
+    return res.status(500).json({ 
+      error: 'Internal server error during payment processing',
+      details: err.message
+    });
+  } finally {
+    if (client) client.release();
+  }
+}
+
+// ---------------------------------------------------------------------------
+// GET /api/courses
+// ---------------------------------------------------------------------------
+async function listCourses(req, res) {
+  const client = await pool.connect();
+  await client.query("SET app.current_user_role = 'super_admin'");
+  try {
+    const result = await client.query('SELECT * FROM courses WHERE is_active = TRUE ORDER BY name ASC');
+    return res.status(200).json({ courses: result.rows });
+  } catch (err) {
+    console.error('LIST COURSES ERROR:', err.message);
+    return res.status(500).json({ error: 'Internal server error' });
+  } finally {
+    client.release();
+  }
+}
+
+// ---------------------------------------------------------------------------
+// GET /api/courses/:courseId/batches
+// ---------------------------------------------------------------------------
+async function listBatches(req, res) {
+  const client = await pool.connect();
+  await client.query("SET app.current_user_role = 'super_admin'");
+  try {
+    const { courseId } = req.params;
+    const result = await client.query(
+      `SELECT *, (capacity - enrolled_count) as seats_remaining, (enrolled_count >= capacity) as is_full 
+       FROM batches 
+       WHERE course_id = $1 AND is_active = TRUE 
+       ORDER BY start_date ASC`,
+      [courseId]
+    );
+    return res.status(200).json({ batches: result.rows });
+  } catch (err) {
+    console.error('LIST BATCHES ERROR:', err.message);
+    return res.status(500).json({ error: 'Internal server error' });
+  } finally {
+    client.release();
+  }
+}
+
+// ---------------------------------------------------------------------------
+// GET /api/pincode/:pin
+// ---------------------------------------------------------------------------
+async function listPinCode(req, res) {
+  try {
+    const { pin } = req.params;
+    const result = await lookupPinCode(pin);
+    return res.status(200).json(result);
+  } catch (err) {
+    console.error('PINCODE LOOKUP ERROR:', err.message);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+// ---------------------------------------------------------------------------
+// PATCH /api/registration/batches/:id
+// Update batch details (capacity, schedule, status)
+// ---------------------------------------------------------------------------
+async function updateBatch(req, res) {
+  const client = await pool.connect();
+  
+  // Set the role dynamically to enforce RLS
+  await client.query("SELECT set_config('app.current_user_id', $1::text, false)", [req.user.user_id]);
+  await client.query("SELECT set_config('app.current_user_role', $1::text, false)", [req.user.role]);
+
+  try {
+    const { id } = req.params;
+    const { capacity, schedule, is_active } = req.body;
+
+    await client.query('BEGIN');
+
+    // 1. Fetch current state to check existence & RLS
+    const checkRes = await client.query('SELECT enrolled_count FROM batches WHERE id = $1 FOR UPDATE', [id]);
+    if (checkRes.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Batch not found or permission denied' });
+    }
+
+    const { enrolled_count } = checkRes.rows[0];
+
+    // 2. Validate capacity if provided
+    if (capacity !== undefined) {
+      if (capacity < enrolled_count) {
+        await client.query('ROLLBACK');
+        return res.status(400).json({ 
+          error: `Cannot reduce capacity below current enrollment (${enrolled_count} students already in batch)` 
+        });
+      }
+    }
+
+    // 3. Coordinate Update
+    const updateRes = await client.query(
+      `UPDATE batches 
+       SET capacity = COALESCE($2, capacity),
+           schedule = COALESCE($3, schedule),
+           is_active = COALESCE($4, is_active),
+           updated_at = NOW()
+       WHERE id = $1
+       RETURNING *`,
+      [id, capacity, schedule, is_active]
+    );
+
+    await client.query('COMMIT');
+
+    return res.status(200).json({
+      message: 'Batch updated successfully',
+      batch: updateRes.rows[0]
+    });
+
+  } catch (err) {
+    if (client) await client.query('ROLLBACK');
+    console.error('UPDATE BATCH ERROR:', err.message);
+    return res.status(500).json({ error: 'Internal server error during batch update' });
+  } finally {
+    if (client) client.release();
+  }
+}
+
+
+
+=======
+>>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
 module.exports = {
   createDraft,
   updatePersonal,
@@ -977,4 +1463,12 @@ module.exports = {
   listRegistrations,
   getRegistration,
   editRegistration,
+<<<<<<< HEAD
+  handlePaymentSuccess,
+  listCourses,
+  listBatches,
+  listPinCode,
+  updateBatch,
+=======
+>>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
 };

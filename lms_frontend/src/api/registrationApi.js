@@ -1,4 +1,8 @@
+<<<<<<< HEAD
+import axiosInstance from './axiosInstance';
+=======
 import { axiosInstance } from './axiosInstance';
+>>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
 
 export const registrationApi = {
   createDraft: async (data, isFormData = false) => {
@@ -51,17 +55,34 @@ export const registrationApi = {
 
   // Helpers
   lookupPinCode: async (pin) => {
+<<<<<<< HEAD
+    const response = await axiosInstance.get(`/api/registration/pincode/${pin}`);
+=======
     const response = await axiosInstance.get(`/api/pincode/${pin}`);
+>>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
     return response.data;
   },
 
   listCourses: async () => {
+<<<<<<< HEAD
+    const response = await axiosInstance.get('/api/registration/courses');
+=======
     const response = await axiosInstance.get('/api/courses');
+>>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
     return response.data;
   },
 
   listBatches: async (courseId) => {
+<<<<<<< HEAD
+    const response = await axiosInstance.get(`/api/registration/courses/${courseId}/batches`);
+    return response.data;
+  },
+
+  deleteLead: async (id) => {
+    const response = await axiosInstance.delete(`/api/leads/${id}`);
+=======
     const response = await axiosInstance.get(`/api/courses/${courseId}/batches`);
+>>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
     return response.data;
   },
 };

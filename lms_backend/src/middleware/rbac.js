@@ -11,11 +11,24 @@
 // ==========================================================================
 
 const ROLE_HIERARCHY = {
+<<<<<<< HEAD
+  super_admin:       50,
+  hr:                40,
+  bda:               30,
+  trainer:           20,
+  student:           10,
+  // lead_registrant is a transient role issued to converted leads so they can
+  // complete the registration wizard before a full user account is activated.
+  // It carries the lowest privilege level and is intentionally absent from
+  // the PostgreSQL user_role ENUM — it only exists inside signed JWTs.
+  lead_registrant:   5,
+=======
   super_admin: 50,
   hr:          40,
   bda:         30,
   trainer:     20,
   student:     10,
+>>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
 };
 
 function requireRole(...allowedRoles) {

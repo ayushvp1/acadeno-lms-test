@@ -28,6 +28,9 @@ Thumbs.db
 .vscode/
 .idea/
 *.swp
+<<<<<<< HEAD
+*.swo
+=======
 *.swo
 
 # Uploads (EPIC-03: file uploads stored locally)
@@ -36,3 +39,4 @@ uploads/
 # Process output files
 svr.out
 svr.err
+>>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906

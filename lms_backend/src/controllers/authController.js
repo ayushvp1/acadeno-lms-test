@@ -9,7 +9,11 @@
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const { pool } = require('../db/index');
+<<<<<<< HEAD
+const { generateTokens, generateWizardToken } = require('../utils/jwt');
+=======
 const { generateTokens } = require('../utils/jwt');
+>>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
 const { sendLockoutEmail, sendOTPEmail } = require('../services/emailService');
 const redis = require('../utils/redis');
 
@@ -125,8 +129,12 @@ async function issueTokensAndRespond(req, res, client, user) {
 async function login(req, res) {
   const client = await pool.connect();
   // Elevate to super_admin context strictly for secure backend authentication queries to bypass RLS
+<<<<<<< HEAD
+  await client.query("SELECT set_config('app.current_user_role', 'super_admin', false)");
+=======
   await client.query("SET app.current_user_role = 'super_admin'");
 
+>>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
 
   try {
     const { email, password } = req.body;
@@ -245,7 +253,12 @@ async function login(req, res) {
         );
 
         // Generate 6-digit OTP and store in Redis
+<<<<<<< HEAD
+        // Generate 6-digit OTP using crypto.randomBytes for maximum compatibility
+        const mfaOtp = (crypto.randomBytes(3).readUIntBE(0, 3) % 900000 + 100000).toString();
+=======
         const mfaOtp = crypto.randomInt(100000, 999999).toString();
+>>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
         const mfaKey = `otp:mfa:${user.id}`;
         await redis.set(mfaKey, mfaOtp, 'EX', MFA_OTP_TTL_SECONDS);
 
@@ -267,8 +280,12 @@ async function login(req, res) {
     return await issueTokensAndRespond(req, res, client, user);
   } catch (err) {
     // ---- 9. Unexpected errors — never leak internals ----
+<<<<<<< HEAD
+    console.error('Login error:', err.message);
+=======
     console.error('LOGIN ERROR:', err.message);
     console.error('STACK:', err.stack);
+>>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
     return res.status(500).json({ error: 'Internal server error' });
   } finally {
     client.release();
@@ -289,7 +306,11 @@ async function login(req, res) {
 async function refresh(req, res) {
   const client = await pool.connect();
   // Elevate to super_admin context strictly for secure backend authentication queries to bypass RLS
+<<<<<<< HEAD
+  await client.query("SELECT set_config('app.current_user_role', 'super_admin', false)");
+=======
   await client.query("SET app.current_user_role = 'super_admin'");
+>>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
 
 
   try {
@@ -437,7 +458,11 @@ async function refresh(req, res) {
 async function logout(req, res) {
   const client = await pool.connect();
   // Elevate to super_admin context strictly for secure backend authentication queries to bypass RLS
+<<<<<<< HEAD
+  await client.query("SELECT set_config('app.current_user_role', 'super_admin', false)");
+=======
   await client.query("SET app.current_user_role = 'super_admin'");
+>>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
 
 
   try {
@@ -481,7 +506,11 @@ async function logout(req, res) {
 async function forgotPassword(req, res) {
   const client = await pool.connect();
   // Elevate to super_admin context strictly for secure backend authentication queries to bypass RLS
+<<<<<<< HEAD
+  await client.query("SELECT set_config('app.current_user_role', 'super_admin', false)");
+=======
   await client.query("SET app.current_user_role = 'super_admin'");
+>>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
 
 
   try {
@@ -524,7 +553,11 @@ async function forgotPassword(req, res) {
     const user = userResult.rows[0];
 
     // ---- Generate cryptographically secure 6-digit OTP ----
+<<<<<<< HEAD
+    const otp = (crypto.randomBytes(3).readUIntBE(0, 3) % 900000 + 100000).toString();
+=======
     const otp = crypto.randomInt(100000, 999999).toString();
+>>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
 
     // Store in Redis: key = "otp:reset:{user_id}", TTL = 600s
     const otpKey = `otp:reset:${user.id}`;
@@ -560,7 +593,11 @@ async function forgotPassword(req, res) {
 async function resetPassword(req, res) {
   const client = await pool.connect();
   // Elevate to super_admin context strictly for secure backend authentication queries to bypass RLS
+<<<<<<< HEAD
+  await client.query("SELECT set_config('app.current_user_role', 'super_admin', false)");
+=======
   await client.query("SET app.current_user_role = 'super_admin'");
+>>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
 
 
   try {
@@ -660,7 +697,11 @@ async function resetPassword(req, res) {
 async function verifyMfa(req, res) {
   const client = await pool.connect();
   // Elevate to super_admin context strictly for secure backend authentication queries to bypass RLS
+<<<<<<< HEAD
+  await client.query("SELECT set_config('app.current_user_role', 'super_admin', false)");
+=======
   await client.query("SET app.current_user_role = 'super_admin'");
+>>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
 
 
   try {
@@ -776,4 +817,54 @@ async function getMe(req, res) {
   }
 }
 
+<<<<<<< HEAD
+// ---------------------------------------------------------------------------
+// POST /auth/validate-registration-token  (Public — no auth middleware)
+// ---------------------------------------------------------------------------
+// Validates a one-time invite token issued when a BDA converts a lead.
+// Looks up the token in Redis, then issues a short-lived wizard JWT so the
+// lead can access the registration wizard endpoints (role: lead_registrant).
+// ---------------------------------------------------------------------------
+async function validateRegistrationToken(req, res) {
+  try {
+    const { token } = req.body;
+
+    if (!token) {
+      return res.status(400).json({ error: 'Token is required' });
+    }
+
+    // Look up the invite data stored in Redis when lead was converted
+    const raw = await redis.get(`reg:invite:${token}`);
+
+    if (!raw) {
+      return res.status(400).json({
+        error: 'This registration link has expired or has already been used.',
+        code:  'INVITE_TOKEN_INVALID',
+      });
+    }
+
+    const inviteData = JSON.parse(raw);
+
+    // Issue a 4-hour wizard-only JWT — role: lead_registrant
+    const accessToken = generateWizardToken({
+      user_id: inviteData.bda_id,   // bda who converted the lead acts as the registering user_id
+      role:    'lead_registrant',
+      email:   inviteData.email,
+      lead_id: inviteData.lead_id,
+    });
+
+    return res.status(200).json({
+      accessToken,
+      email:     inviteData.email,
+      lead_name: inviteData.lead_name,
+    });
+  } catch (err) {
+    console.error('validateRegistrationToken error:', err.message);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+module.exports = { login, refresh, logout, forgotPassword, resetPassword, verifyMfa, getMe, validateRegistrationToken };
+=======
 module.exports = { login, refresh, logout, forgotPassword, resetPassword, verifyMfa, getMe };
+>>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906

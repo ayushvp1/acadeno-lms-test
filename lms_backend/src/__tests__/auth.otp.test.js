@@ -99,6 +99,10 @@ beforeEach(() => {
 // ===========================================================================
 describe('POST /auth/forgot-password', () => {
   test('returns 400 if email is missing', async () => {
+<<<<<<< HEAD
+    mockClient.query.mockResolvedValueOnce({});                 // SET role
+=======
+>>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
     const res = await request(app)
       .post('/auth/forgot-password')
       .send({});
@@ -109,7 +113,13 @@ describe('POST /auth/forgot-password', () => {
 
   test('returns 200 with generic message when user does NOT exist (anti-enumeration)', async () => {
     mockRedis.get.mockResolvedValueOnce(null);                   // rate limit check
+<<<<<<< HEAD
+    mockClient.query
+      .mockResolvedValueOnce({})                                 // SET role
+      .mockResolvedValueOnce({ rows: [] });                      // user not found
+=======
     mockClient.query.mockResolvedValueOnce({ rows: [] });        // user not found
+>>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
 
     const res = await request(app)
       .post('/auth/forgot-password')
@@ -123,9 +133,17 @@ describe('POST /auth/forgot-password', () => {
 
   test('returns 200 and sends OTP email when user exists', async () => {
     mockRedis.get.mockResolvedValueOnce(null);                   // no rate limit yet
+<<<<<<< HEAD
+    mockClient.query
+      .mockResolvedValueOnce({})                                 // SET role
+      .mockResolvedValueOnce({                                   // user found
+        rows: [mockUserRow()],
+      });
+=======
     mockClient.query.mockResolvedValueOnce({                     // user found
       rows: [mockUserRow()],
     });
+>>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
     mockRedis.set.mockResolvedValueOnce('OK');                   // store OTP
     mockRedis.incr.mockResolvedValueOnce(1);                     // rate limit incr
     mockRedis.expire.mockResolvedValueOnce(1);                   // set TTL
@@ -154,23 +172,41 @@ describe('POST /auth/forgot-password', () => {
   });
 
   test('returns 429 when rate limit is exceeded (3 requests in 15 min)', async () => {
+<<<<<<< HEAD
+    mockClient.query.mockResolvedValueOnce({});                 // SET role
+    mockRedis.get.mockResolvedValueOnce('3');                    // already at limit
+=======
     mockRedis.get.mockResolvedValueOnce('3');                    // already at limit
 
+>>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
     const res = await request(app)
       .post('/auth/forgot-password')
       .send({ email: 'test@acadeno.com' });
 
     expect(res.status).toBe(429);
     expect(res.body.code).toBe('RATE_LIMIT_EXCEEDED');
+<<<<<<< HEAD
+    // Should have called only the SET role query
+    expect(mockClient.query).toHaveBeenCalledTimes(1);
+=======
     // Should not even query the database
     expect(mockClient.query).not.toHaveBeenCalled();
+>>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
   });
 
   test('increments rate limit counter and sets TTL on first request', async () => {
     mockRedis.get.mockResolvedValueOnce(null);
+<<<<<<< HEAD
+    mockClient.query
+      .mockResolvedValueOnce({})                                 // SET role
+      .mockResolvedValueOnce({
+        rows: [mockUserRow()],
+      });
+=======
     mockClient.query.mockResolvedValueOnce({
       rows: [mockUserRow()],
     });
+>>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
     mockRedis.set.mockResolvedValueOnce('OK');
     mockRedis.incr.mockResolvedValueOnce(1);         // first request
     mockRedis.expire.mockResolvedValueOnce(1);
@@ -185,9 +221,17 @@ describe('POST /auth/forgot-password', () => {
 
   test('does not reset TTL on subsequent requests within the window', async () => {
     mockRedis.get.mockResolvedValueOnce('1');         // 1 prior request
+<<<<<<< HEAD
+    mockClient.query
+      .mockResolvedValueOnce({})                                 // SET role
+      .mockResolvedValueOnce({
+        rows: [mockUserRow()],
+      });
+=======
     mockClient.query.mockResolvedValueOnce({
       rows: [mockUserRow()],
     });
+>>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
     mockRedis.set.mockResolvedValueOnce('OK');
     mockRedis.incr.mockResolvedValueOnce(2);         // second request
 
@@ -200,7 +244,11 @@ describe('POST /auth/forgot-password', () => {
     expect(mockRedis.expire).not.toHaveBeenCalled();
   });
 
+<<<<<<< HEAD
+  test('returns 500 on unexpected error (forgot-password)', async () => {
+=======
   test('returns 500 on unexpected error without leaking details', async () => {
+>>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
     mockRedis.get.mockRejectedValueOnce(new Error('Redis down'));
 
     const res = await request(app)
@@ -252,7 +300,13 @@ describe('POST /auth/reset-password', () => {
   });
 
   test('returns 400 "Invalid OTP" when user is not found', async () => {
+<<<<<<< HEAD
+    mockClient.query
+      .mockResolvedValueOnce({})                                 // SET role
+      .mockResolvedValueOnce({ rows: [] });
+=======
     mockClient.query.mockResolvedValueOnce({ rows: [] });
+>>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
 
     const res = await request(app)
       .post('/auth/reset-password')
@@ -263,9 +317,17 @@ describe('POST /auth/reset-password', () => {
   });
 
   test('returns 400 OTP_EXPIRED when Redis key has expired', async () => {
+<<<<<<< HEAD
+    mockClient.query
+      .mockResolvedValueOnce({})                                 // SET role
+      .mockResolvedValueOnce({
+        rows: [mockUserRow()],
+      });
+=======
     mockClient.query.mockResolvedValueOnce({
       rows: [mockUserRow()],
     });
+>>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
     mockRedis.get.mockResolvedValueOnce(null);      // OTP key expired
 
     const res = await request(app)
@@ -278,9 +340,17 @@ describe('POST /auth/reset-password', () => {
   });
 
   test('returns 400 OTP_INVALID when OTP does not match', async () => {
+<<<<<<< HEAD
+    mockClient.query
+      .mockResolvedValueOnce({})                                 // SET role
+      .mockResolvedValueOnce({
+        rows: [mockUserRow()],
+      });
+=======
     mockClient.query.mockResolvedValueOnce({
       rows: [mockUserRow()],
     });
+>>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
     mockRedis.get.mockResolvedValueOnce('999999');   // stored OTP
 
     const res = await request(app)
@@ -294,6 +364,10 @@ describe('POST /auth/reset-password', () => {
 
   test('returns 200, updates password, deletes OTP, and revokes all tokens on success', async () => {
     mockClient.query
+<<<<<<< HEAD
+      .mockResolvedValueOnce({})                         // SET role
+=======
+>>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
       .mockResolvedValueOnce({ rows: [mockUserRow()] })   // SELECT user
       .mockResolvedValueOnce({ rows: [] })                 // UPDATE password
       .mockResolvedValueOnce({ rows: [] });                // UPDATE revoke tokens
@@ -312,7 +386,11 @@ describe('POST /auth/reset-password', () => {
     expect(bcrypt.hash).toHaveBeenCalledWith('StrongPass1!', 12);
 
     // Verify password was updated in DB
+<<<<<<< HEAD
+    const updateCall = mockClient.query.mock.calls[2]; // Change index due to SET query
+=======
     const updateCall = mockClient.query.mock.calls[1];
+>>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
     expect(updateCall[0]).toMatch(/UPDATE users/);
     expect(updateCall[1][0]).toBe('$2b$12$newHashedPassword');
 
@@ -320,7 +398,11 @@ describe('POST /auth/reset-password', () => {
     expect(mockRedis.del).toHaveBeenCalledWith(`otp:reset:${TEST_USER_ID}`);
 
     // Verify ALL refresh tokens were revoked
+<<<<<<< HEAD
+    const revokeCall = mockClient.query.mock.calls[3]; // Change index due to SET query
+=======
     const revokeCall = mockClient.query.mock.calls[2];
+>>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
     expect(revokeCall[0]).toMatch(/UPDATE refresh_tokens/);
     expect(revokeCall[0]).toMatch(/revoked_at = NOW/);
     expect(revokeCall[1]).toContain(TEST_USER_ID);
@@ -328,6 +410,10 @@ describe('POST /auth/reset-password', () => {
 
   test('also resets failed_login_count and locked_until on password reset', async () => {
     mockClient.query
+<<<<<<< HEAD
+      .mockResolvedValueOnce({})                         // SET role
+=======
+>>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
       .mockResolvedValueOnce({ rows: [mockUserRow()] })
       .mockResolvedValueOnce({ rows: [] })
       .mockResolvedValueOnce({ rows: [] });
@@ -339,13 +425,24 @@ describe('POST /auth/reset-password', () => {
       .post('/auth/reset-password')
       .send({ email: 'test@acadeno.com', otp: '654321', newPassword: 'StrongPass1!' });
 
+<<<<<<< HEAD
+    const updateCall = mockClient.query.mock.calls[2]; // Change index due to SET query
+=======
     const updateCall = mockClient.query.mock.calls[1];
+>>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
     expect(updateCall[0]).toMatch(/failed_login_count\s*=\s*0/);
     expect(updateCall[0]).toMatch(/locked_until\s*=\s*NULL/);
   });
 
+<<<<<<< HEAD
+  test('returns 500 on unexpected error (reset-password)', async () => {
+    mockClient.query
+      .mockResolvedValueOnce({})                                 // SET role
+      .mockRejectedValueOnce(new Error('DB down'));
+=======
   test('returns 500 on unexpected error without leaking details', async () => {
     mockClient.query.mockRejectedValueOnce(new Error('DB down'));
+>>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
 
     const res = await request(app)
       .post('/auth/reset-password')
