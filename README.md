@@ -4,15 +4,9 @@
 ![React](https://img.shields.io/badge/React-18.x-blue?logo=react)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18-336791?logo=postgresql)
 ![Redis](https://img.shields.io/badge/Redis-5.x-dc382d?logo=redis)
-<<<<<<< HEAD
 ![Jest](https://img.shields.io/badge/Tests-85/85_Passing-brightgreen?logo=jest)
 
 > An enterprise-grade, highly secure Learning Management System (LMS) built with a modern decoupled architecture. Now supporting the full lifecycle from Lead Acquisition to Student Enrollment.
-=======
-![Jest](https://img.shields.io/badge/Tests-42/42_Passing-brightgreen?logo=jest)
-
-> An enterprise-grade, highly secure Learning Management System (LMS) built with a modern decoupled architecture. EPIC-01 delivers a robust authentication and Role-Based Access Control (RBAC) ecosystem ready for scale.
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
 
 ---
 
@@ -32,19 +26,13 @@
 ---
 
 ## 🎯 Project Overview
-<<<<<<< HEAD
-**ACADENO LMS** is a full-stack educational platform designed to seamlessly connect Students, Trainers, HR, and Business Development (BDA) teams. 
+**ACADENO LMS** is a full-stack educational platform designed to seamlessly connect Students, Trainers, HR, and Business Development (BDA) teams in one environment.
 
-With the completion of **EPIC-01, EPIC-02, and EPIC-03**, the platform now handles:
+Currently, **EPIC-01, EPIC-02, and EPIC-03** have been completed natively without external auth providers to eliminate vendor lock-in and optimize for strict enterprise security. The platform handles:
 * **Secure Authentication**: MFA, Token Rotation, and RLS.
 * **Lead Lifecycle**: BDA-driven lead management, follow-ups, and automated conversion.
 * **Student Onboarding**: A multi-step registration wizard, secure document handling, and payment processing.
 * **Course Activation**: Automated enrollment and credential delivery upon payment confirmation.
-=======
-**ACADENO LMS** is a full-stack educational platform designed to seamlessly connect Students, Trainers, HR, and Business Development (BDA) teams in one environment. 
-
-Currently, **EPIC-01 (Authentication)** has been completed natively without external auth providers (Auth0/Firebase) to eliminate vendor lock-in and optimize for strict enterprise security. It fully supports features like Multi-Factor Authentication (MFA), Lockouts, automatic Token Rotation, and Row-Level Database Security.
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
 
 ---
 
@@ -52,11 +40,7 @@ Currently, **EPIC-01 (Authentication)** has been completed natively without exte
 ### Backend
 * **Environment:** Node.js + Express
 * **Database:** PostgreSQL 18 (Raw SQL with `pg` node-postgres)
-<<<<<<< HEAD
-* **Caching/State:** Redis (OTP, Rate Limiting & Registration Invites)
-=======
-* **Caching/State:** Redis (OTP & Rate Limiting via `ioredis`)
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
+* **Caching/State:** Redis (OTP, Rate Limiting & Registration Invites via `ioredis`)
 * **Security:** JWT (RS256 Asymmetric), bcrypt, Helmet
 
 ### Frontend
@@ -102,26 +86,13 @@ EMAIL_SERVICE=gmail
 EMAIL_USER=your_email@gmail.com
 EMAIL_APP_PASSWORD=your_app_password
 EMAIL_FROM="Acadeno LMS <your_email@gmail.com>"
-<<<<<<< HEAD
-=======
 OTP_DELIVERY_METHOD=email
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
 REDIS_URL=redis://localhost:6379
 FRONTEND_URL=http://localhost:5173
 PORT=3001
 NODE_ENV=development
 ```
 
-<<<<<<< HEAD
-### 3. Database Migration & Seeding
-From the `lms_backend` directory:
-1. Ensure the PostgreSQL database `acadeno_lms` is created.
-2. Execute the migrations:
-   * `psql -d acadeno_lms -f src/db/migrations/001_auth_schema.sql`
-   * `psql -d acadeno_lms -f src/db/migrations/002_lead_schema.sql`
-   * `psql -d acadeno_lms -f src/db/migrations/003_registration_schema.sql`
-3. Execute `node seed.js` for initial administrative state.
-=======
 **`lms_frontend/.env`**
 ```env
 VITE_API_URL=http://localhost:3001
@@ -130,8 +101,11 @@ VITE_API_URL=http://localhost:3001
 ### 3. Database Migration & Seeding
 From the `lms_backend` directory:
 1. Ensure the PostgreSQL database `acadeno_lms` is created.
-2. Execute the migration file: `psql -d acadeno_lms -f src/db/migrations/001_auth_schema.sql`
-3. Execute `node seed.js` (if provided) to bypass the RLS policies and inject the root test `super_admin` (`admin@acadeno.com` / `Admin123!`).
+2. Execute the migrations:
+   * `psql -d acadeno_lms -f src/db/migrations/001_auth_schema.sql`
+   * `psql -d acadeno_lms -f src/db/migrations/002_lead_schema.sql`
+   * `psql -d acadeno_lms -f src/db/migrations/003_registration_schema.sql`
+3. Execute `node seed.js` to inject the initial administrative state (super_admin).
 
 ### 4. Running the Development Servers
 Open two terminal instances.
@@ -145,61 +119,50 @@ cd lms_frontend
 npm run dev
 ```
 Navigate to `http://localhost:5173`.
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
 
 ---
 
 ## 📡 API Endpoints
 
-<<<<<<< HEAD
 ### Authentication
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/api/auth/login` | Credentials discovery & MFA trigger. |
-| `POST` | `/api/auth/verify-mfa` | MFA verification to complete login. |
-| `GET` | `/api/auth/me` | Fetch active profile with RBAC context. |
-
-### Lead Management (Epic 2)
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/leads` | List leads with role-based filtering (RLS). |
-| `POST` | `/api/leads/:id/convert` | Lock lead and send registration invite. |
-
-### Student Registration (Epic 3) & Batch Management
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/api/registration/draft` | Initialize registration draft from invite. |
-| `PUT` | `/api/registration/draft/:id/personal` | Update pre-enrolled personal details. |
-| `POST` | `/api/registration/draft/:id/submit` | Finalize registration & trigger payment. |
-| `PATCH` | `/api/registration/batches/:id` | Update batch capacity/schedule (Admin/Trainer). |
-| `POST` | `/api/registration/payment-webhook` | Confirm payment & activate student account. |
-=======
 | Method | Endpoint | Description | Auth Required? |
 |--------|----------|-------------|----------------|
-| `POST` | `/api/auth/login` | Validates credentials, issues JWT/httpOnly Cookie or triggers MFA. | No |
-| `POST` | `/api/auth/refresh` | Silently rotates the refresh token cookie and issues a new access token. | No (Uses Cookie) |
-| `POST` | `/api/auth/logout` | Revokes the current session token in DB and clears the browser cookie. | Yes |
-| `GET` | `/api/auth/me` | Fetches the active user profile, enforcing silent RBAC loads in the UI. | Yes |
-| `POST` | `/api/auth/forgot-password` | Emails a secure OTP (stored in Redis) for recovery. Rate Limited. | No |
-| `POST` | `/api/auth/reset-password` | Consumes OTP and updates the bcrypt hash to reset password. | No |
-| `POST` | `/api/auth/verify-mfa` | Verifies the OTP triggered by login to conditionally trust dynamic devices. | No |
-| `GET` | `/health` | Server heartbeat monitoring. | No |
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
+| `POST` | `/api/auth/login` | Credentials discovery & MFA trigger. | No |
+| `POST` | `/api/auth/verify-mfa` | MFA verification to complete login. | No |
+| `POST` | `/api/auth/refresh` | Silently rotates refresh token and issues new access token. | Cookie |
+| `POST` | `/api/auth/logout` | Revokes current session and clears cookies. | Yes |
+| `GET` | `/api/auth/me` | Fetch active profile with RBAC context. | Yes |
+| `POST` | `/api/auth/forgot-password` | Emails a secure OTP for recovery. Rate Limited. | No |
+| `POST` | `/api/auth/reset-password` | Consumes OTP and updates password. | No |
+
+### Lead Management (Epic 2)
+| Method | Endpoint | Description | Auth Required? |
+|--------|----------|-------------|----------------|
+| `GET` | `/api/leads` | List leads with role-based filtering (RLS). | Yes |
+| `POST` | `/api/leads/:id/convert` | Lock lead and send registration invite. | Yes |
+
+### Student Registration (Epic 3) & Batch Management
+| Method | Endpoint | Description | Auth Required? |
+|--------|----------|-------------|----------------|
+| `POST` | `/api/registration/draft` | Initialize registration draft from invite. | No |
+| `PUT` | `/api/registration/draft/:id/personal` | Update pre-enrolled personal details. | No |
+| `POST` | `/api/registration/draft/:id/submit` | Finalize registration & trigger payment. | No |
+| `PATCH` | `/api/registration/batches/:id` | Update batch capacity/schedule (Admin/Trainer). | Yes |
+| `POST` | `/api/registration/payment-webhook` | Confirm payment & activate student account. | No |
 
 ---
 
 ## 🛡 Role Permissions (RBAC)
-<<<<<<< HEAD
 Role hierarchy strictly governs routes down to the PostgreSQL layer via RLS.
 
-| Role | Access Level |
-|------|--------------|
-| **`super_admin`** | (Level 50) Full access. Overrides Row Level Security. |
-| **`hr`** | (Level 40) Staff management and employee metrics. |
-| **`trainer`** | (Level 35) Manage assigned batch capacities & materials. |
-| **`bda`** | (Level 30) Lead lifecycle management and conversion. |
-| **`student`** | (Level 10) Dashboard, invoices, and course progress. |
-| **`lead_registrant`** | (Temporary) Scoped access to the registration wizard. |
+| Role | Access Level / Prefix | Description |
+|------|-----------------------|-------------|
+| **`super_admin`** | (Level 50) `/admin` | Full access. Overrides Row Level Security. |
+| **`hr`** | (Level 40) `/hr` | Staff management and employee metrics. |
+| **`trainer`** | (Level 35) `/trainer` | Manage assigned batch capacities & materials. |
+| **`bda`** | (Level 30) `/bda` | Lead lifecycle management and conversion. |
+| **`student`** | (Level 10) `/student` | Dashboard, invoices, and course progress. |
+| **`lead_registrant`** | (Temp) `/register` | Scoped access to the registration wizard. |
 
 ---
 
@@ -214,127 +177,67 @@ Use these accounts to explore role-specific dashboards. All staff use the same p
 | **HR** | `hr@acadeno.com` |
 | **BDA** | `bda@acadeno.com` |
 | **Trainer** | `trainer@acadeno.com` |
-=======
-Role hierarchy strictly governs routes down to the PostgreSQL layer.
-
-| Role | Access Level / Allowed Frontend Prefixes |
-|------|------------------------------------------|
-| **`super_admin`** | (Level 50) Full access. `/admin`, `/courses`, `/users`. Overrides Row Level Security (RLS). |
-| **`hr`** | (Level 40) Access to staff metrics, employee onboarding. |
-| **`bda`** | (Level 30) Access to lead management, conversion stats. |
-| **`trainer`** | (Level 20) Manage assigned course materials, tasks, evaluations. |
-| **`student`** | (Level 10) Minimum access. `/courses`, `/progress`, `/tasks`, `/invoices`, `/dashboard`. |
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
 
 ---
 
 ## 🗄 Database Schema
-<<<<<<< HEAD
 Extended schema supporting the full enrollment pipeline.
 
 ### Core Tables
-* **`users`**: RBAC, credentials, MFA status.
+* **`users`**: RBAC, credentials, MFA status, lockouts.
 * **`leads`**: CRM data, status tracking, conversion locks.
 * **`students`**: Personal & profile data linked to `users`.
 * **`enrollments`**: Course participation, fee status, activity audits.
 * **`courses` & `batches`**: Catalog management and intake capacity (RLS enforced).
 * **`registration_drafts`**: Volatile state storage for the enrollment wizard.
-=======
-EPIC-01 implements three primary tables mapping authentication lifecycles.
-
-### `users`
-* `id` (UUID, PK)
-* `email` (TEXT, UNIQUE)
-* `password_hash` (TEXT)
-* `role` (ENUM: user_role)
-* `locked_until` (TIMESTAMPTZ)
-* `mfa_enabled`, `is_active`, `failed_login_count`
-
-### `refresh_tokens`
-* `id` (UUID, PK)
-* `user_id` (UUID, FK -> users)
-* `token_hash` (TEXT, UNIQUE)
-* `device_fingerprint` (TEXT)
-* `expires_at`, `revoked_at`
-
-### `trusted_devices`
-* `id` (UUID, PK)
-* `user_id` (UUID, FK -> users)
-* `device_fingerprint` (TEXT)
-* `trusted_at`, `last_seen`
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
+* **`refresh_tokens`**: Token rotation and session management.
+* **`trusted_devices`**: Device fingerprinting for MFA trust.
 
 ---
 
 ## 🧪 Testing
-<<<<<<< HEAD
-The backend utilizes **Jest** for assertions and **Supertest** to emulate HTTP workflows. 
-=======
-The backend utilizes **Jest** for assertions and **Supertest** to emulate HTTP workflows seamlessly without port conflicts. 
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
+The backend utilizes **Jest** for assertions and **Supertest** to emulate HTTP workflows seamlessly.
 ```bash
 cd lms_backend
 npm test
 ```
-<<<<<<< HEAD
 **Coverage:** 85/85 Passing. Includes Auth (42), Leads (12), Courses (15), Registration Flow (6), and Batch Management (10).
-=======
-**Coverage includes:** Lockouts, Invalid credentials, OTP expiry, Rate limit throttling, Token Rotation hijack attempts, and successful JWT derivations. (Current passing rate: `42/42`).
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
 
 ---
 
 ## 🧠 Architecture Decisions (ADRs)
 
-<<<<<<< HEAD
 * **Why RS256 over HS256?** Asymmetric keys allow microservices to verify tokens without sharing the private signing key.
-* **Why RLS for Batches?** Row-Level Security ensures Trainers can only modify batches they are assigned to, while BDA users are limited to read-only access.
-* **Why Registration Drafts?** Decoupling draft state from core platform users ensures that only completed, verified, and PAID registrations enter the primary ecosystem.
-
----
-
-## MAP Module Roadmap
-* [x] **EPIC-01: Authentication & Security**
-* [x] **EPIC-02: Lead Management & CRM**
-* [x] **EPIC-03: Student Registration & Enrollment**
-* [x] **BATCH MANAGEMENT: Administrative Controls**
-* [ ] **EPIC-04: Course Content & Evaluation**
-* [ ] **EPIC-05: AI Tutoring & Assistant Integration**
-=======
-* **Why RS256 over HS256?**
-  RS256 uses an asymmetric key pair. Our backend signs the JWT natively with a rigorously held private key, allowing any future microservices to safely verify the context by simply caching the public key without ever handling secrets.
-* **Why Redis for OTP?**
-  High throughput, automatic TTL garbage collection, and preventing unnecessary noisy writes sequentially executing in the PostgreSQL master.
-* **Why `httpOnly` Cookies for Refresh Tokens?**
-  Storing persistent tokens in `localStorage` leaves platforms severely prone to XSS attacks natively opening vectors to browser memory. `httpOnly` prevents JavaScript access entirely while facilitating smooth, invisible token rotations automatically attached by the browser headers via Axios interceptors.
-* **Why RLS in PostgreSQL?**
-  Row-Level Security enforces zero-trust architectures at the data level. Rather than trusting Application Logic perfectly filtering queries, the Database itself physically limits queries based on `app.current_user_role` mapping.
+* **Why RLS?** Row-Level Security ensures data-level isolation (e.g., Trainers only see/edit their assigned batches).
+* **Why Registration Drafts?** Decoupling draft state from core users ensures that only completed, verified, and PAID registrations enter the primary ecosystem.
+* **Why Redis for OTP?** High throughput, automatic TTL garbage collection, and preventing noisy writes in PostgreSQL.
+* **Why `httpOnly` Cookies?** Storing refresh tokens in `httpOnly` cookies prevents JavaScript access (XSS) and facilitates automatic token rotation.
 
 ---
 
 ## ⚠️ Known Issues & Troubleshooting
 
 * **Internal Server Error (500) at Login `permission denied for table users`:**
-  * **Cause:** Your PostgreSQL `DATABASE_URL` user mapping lacks the native permissions to access the newly migrated tables if generated by a different `postgres` super admin. 
-  * **Fix:** Execute `GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO "YOUR_DB_USER"` inside `psql` or PGAdmin.
+  * **Cause:** DB user lacks permissions to accessible newly migrated tables.
+  * **Fix:** Execute `GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO "YOUR_DB_USER"` inside `psql`.
 * **Axios Interceptor Infinite Reload Loop:**
-  * **Cause:** Initial loads fetching from `/api/auth/me` causing dual 401 rejections natively rejecting UI state before contexts build. 
-  * **Fix:** Bypassed using a standard decoupled `axios.post` explicitly grabbing tokens from the native backend outside of the interceptor pipeline (Fixed in Context layer natively in production).
+  * **Cause:** Initial loads fetching from `/api/auth/me` causing dual 401 rejections.
+  * **Fix:** Bypassed using a standard decoupled `axios.post` for initial auth check (Fixed in Context layer in production).
 
 ---
 
 ## 🤝 Contributing Guide
 1. Create a descriptive feature branch: `git checkout -b feature/US-AUTH-07-google-sso`
-2. Follow strict ESLint and standard conventions natively attached.
-3. Write associated Jest tests mapping your assertions. Un-tested structural functions will automatically fail PR.
-4. If migrating, always place new schemas cleanly into `src/db/migrations/` sequentially naming contexts.
+2. Follow strict ESLint conventions.
+3. Write associated Jest tests mapping your assertions.
+4. Place new schemas in `src/db/migrations/` sequentially.
 
 ---
 
 ## 🗺 Module Roadmap
-* [x] **EPIC-01: Authentication (CURRENT)**
-* [ ] **EPIC-02: Course Management**
-* [ ] **EPIC-03: Live Student Tracking & Tasks**
-* [ ] **EPIC-04: Billing & Invoices**
-* [ ] **EPIC-05: AI Assistant Integration**
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
+* [x] **EPIC-01: Authentication & Security**
+* [x] **EPIC-02: Lead Management & CRM**
+* [x] **EPIC-03: Student Registration & Enrollment**
+* [x] **BATCH MANAGEMENT: Administrative Controls**
+* [ ] **EPIC-04: Course Content & Evaluation**
+* [ ] **EPIC-05: AI Tutoring & Assistant Integration**
