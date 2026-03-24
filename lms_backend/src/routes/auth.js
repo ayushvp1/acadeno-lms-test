@@ -7,11 +7,7 @@
 const express = require('express');
 const router  = express.Router();
 
-<<<<<<< HEAD
 const { login, refresh, logout, forgotPassword, resetPassword, verifyMfa, getMe, validateRegistrationToken } = require('../controllers/authController');
-=======
-const { login, refresh, logout, forgotPassword, resetPassword, verifyMfa, getMe } = require('../controllers/authController');
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
 const authenticate = require('../middleware/authenticate');
 
 // POST /auth/login            — Authenticate a user          (US-AUTH-01 / US-AUTH-02)
@@ -35,11 +31,8 @@ router.post('/verify-mfa', verifyMfa);
 // GET /auth/me                — Get current user profile      (US-AUTH-05)
 router.get('/me', authenticate, getMe);
 
-<<<<<<< HEAD
 // POST /auth/validate-registration-token — Validate one-time invite token (public)
 // Accepts { token } in body, returns a short-lived wizard JWT for lead_registrant role
 router.post('/validate-registration-token', validateRegistrationToken);
 
-=======
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
 module.exports = router;

@@ -20,3 +20,14 @@ router.get('/', ...authAndRole, listCourses);
 router.get('/:id/batches', ...authAndRole, listBatches);
 
 module.exports = router;
+
+// EPIC-08: Trainer Pool endpoints (US-HR-04)
+const {
+  listTrainerPool,
+  addTrainerToPool,
+  removeTrainerFromPool,
+} = require('../controllers/batchController');
+
+router.get   ('/:courseId/trainer-pool',              ...authAndRole, listTrainerPool);
+router.post  ('/:courseId/trainer-pool',              ...authAndRole, addTrainerToPool);
+router.delete('/:courseId/trainer-pool/:trainerId',   ...authAndRole, removeTrainerFromPool);

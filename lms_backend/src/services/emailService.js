@@ -37,7 +37,6 @@ async function sendLockoutEmail(toEmail, lockedUntil) {
   });
 }
 
-<<<<<<< HEAD
 async function sendLeadArchiveEmail(toEmail, leadName, lastActivityDate) {
   await transporter.sendMail({
     from: process.env.EMAIL_FROM,
@@ -188,29 +187,3 @@ module.exports = {
   sendRegistrationInviteEmail,
   sendEnrollmentSuccessEmail,
 };
-=======
-// ---------------------------------------------------------------------------
-// EPIC-03: Registration Emails
-// ---------------------------------------------------------------------------
-
-async function sendPaymentLinkEmail(toEmail, studentName, paymentUrl, registrationNumber) {
-  await transporter.sendMail({
-    from: process.env.EMAIL_FROM,
-    to: toEmail,
-    subject: `Complete Your Registration Payment - Acadeno LMS (${registrationNumber})`,
-    text: `Dear ${studentName},\n\nYour registration (${registrationNumber}) has been submitted successfully!\n\nPlease complete your payment using the link below:\n${paymentUrl}\n\nIf you have any questions, please contact our support team.\n\nBest regards,\nAcadeno LMS Team`,
-  });
-  // TODO: SMS (Twilio/MSG91) — Send payment link via SMS alongside email
-}
-
-async function sendRegistrationConfirmationEmail(toEmail, studentName, registrationNumber) {
-  await transporter.sendMail({
-    from: process.env.EMAIL_FROM,
-    to: toEmail,
-    subject: `Registration Confirmed - Acadeno LMS (${registrationNumber})`,
-    text: `Dear ${studentName},\n\nYour registration (${registrationNumber}) has been confirmed and your enrollment is now active.\n\nYou can log in to the Acadeno LMS portal to access your courses.\n\nBest regards,\nAcadeno LMS Team`,
-  });
-}
-
-module.exports = { sendOTPEmail, sendLockoutEmail, sendPaymentLinkEmail, sendRegistrationConfirmationEmail };
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906

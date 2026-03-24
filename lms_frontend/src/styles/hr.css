@@ -1,0 +1,468 @@
+/* ==========================================================================
+   ACADENO LMS — HR & Admin Styles (EPIC-08)
+   Uses the same CSS variables defined in the global stylesheet.
+   ========================================================================== */
+
+/* Reuse shared layout classes from leads.css */
+.hr-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  animation: fadeIn 0.4s ease-out;
+}
+
+/* --------------------------------------------------------------------------
+   Filter Bar
+   -------------------------------------------------------------------------- */
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+  background: var(--white);
+  padding: 16px 20px;
+  border-radius: var(--border-radius);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.filter-group label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gray-text);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.filter-group select,
+.filter-group input[type="text"],
+.filter-group input[type="date"] {
+  padding: 8px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 14px;
+  color: var(--text-dark);
+  background: #f8fafc;
+  min-width: 160px;
+}
+
+/* --------------------------------------------------------------------------
+   Data Table
+   -------------------------------------------------------------------------- */
+.hr-table-wrap {
+  background: var(--white);
+  border-radius: var(--border-radius);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  overflow-x: auto;
+}
+
+.hr-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.hr-table thead th {
+  background: #f8fafc;
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gray-text);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.hr-table tbody tr {
+  border-bottom: 1px solid #f1f5f9;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.hr-table tbody tr:hover {
+  background: #f8fafc;
+}
+
+.hr-table td {
+  padding: 12px 16px;
+  color: var(--text-dark);
+}
+
+/* --------------------------------------------------------------------------
+   Status Badges
+   -------------------------------------------------------------------------- */
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.badge-upcoming  { background: #dbeafe; color: #1d4ed8; }
+.badge-active    { background: #d1fae5; color: #065f46; }
+.badge-completed { background: #e0e7ff; color: #4338ca; }
+.badge-cancelled { background: #fee2e2; color: #991b1b; }
+.badge-paid      { background: #d1fae5; color: #065f46; }
+.badge-pending   { background: #fef3c7; color: #92400e; }
+.badge-failed    { background: #fee2e2; color: #991b1b; }
+
+/* --------------------------------------------------------------------------
+   Form Page
+   -------------------------------------------------------------------------- */
+.hr-form-page {
+  max-width: 720px;
+}
+
+.form-card {
+  background: var(--white);
+  border-radius: var(--border-radius);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  padding: 28px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.form-field input,
+.form-field select,
+.form-field textarea {
+  padding: 10px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 14px;
+  color: var(--text-dark);
+  background: #f8fafc;
+}
+
+.form-field input:focus,
+.form-field select:focus,
+.form-field textarea:focus {
+  outline: none;
+  border-color: var(--navy-bg);
+  background: var(--white);
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding-top: 8px;
+}
+
+/* --------------------------------------------------------------------------
+   Batch Detail — Tabs
+   -------------------------------------------------------------------------- */
+.detail-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid #e2e8f0;
+  margin-bottom: 24px;
+}
+
+.detail-tab {
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gray-text);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: color 0.15s, border-color 0.15s;
+  background: none;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+}
+
+.detail-tab.active {
+  color: var(--navy-bg);
+  border-bottom-color: var(--navy-bg);
+}
+
+/* --------------------------------------------------------------------------
+   Analytics Dashboard
+   -------------------------------------------------------------------------- */
+.analytics-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.analytics-stat-card {
+  background: var(--white);
+  padding: 24px;
+  border-radius: var(--border-radius);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.analytics-stat-card .stat-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gray-text);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.analytics-stat-card .stat-value {
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--navy-bg);
+}
+
+/* Bar Chart */
+.bar-chart-wrap {
+  background: var(--white);
+  padding: 24px;
+  border-radius: var(--border-radius);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.bar-chart-wrap h3 {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--navy-bg);
+  margin-bottom: 20px;
+}
+
+.bar-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bar-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.bar-label {
+  font-size: 13px;
+  color: var(--text-dark);
+  width: 180px;
+  flex-shrink: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bar-track {
+  flex: 1;
+  background: #f1f5f9;
+  border-radius: 4px;
+  height: 18px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  background: var(--navy-bg);
+  border-radius: 4px;
+  transition: width 0.4s ease;
+  min-width: 2px;
+}
+
+.bar-count {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-dark);
+  width: 32px;
+  text-align: right;
+}
+
+/* Monthly trend list */
+.trend-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.trend-item {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 10px 16px;
+  text-align: center;
+  min-width: 80px;
+}
+
+.trend-month {
+  font-size: 11px;
+  color: var(--gray-text);
+  font-weight: 600;
+}
+
+.trend-count {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--navy-bg);
+}
+
+/* --------------------------------------------------------------------------
+   System Settings
+   -------------------------------------------------------------------------- */
+.settings-table {
+  background: var(--white);
+  border-radius: var(--border-radius);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  overflow: hidden;
+}
+
+.setting-row {
+  display: grid;
+  grid-template-columns: 220px 1fr 200px;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #f1f5f9;
+  gap: 16px;
+}
+
+.setting-row:last-child {
+  border-bottom: none;
+}
+
+.setting-key {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--navy-bg);
+  font-family: monospace;
+}
+
+.setting-desc {
+  font-size: 13px;
+  color: var(--gray-text);
+}
+
+.setting-value-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.setting-value-input {
+  padding: 6px 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 13px;
+  width: 120px;
+}
+
+/* --------------------------------------------------------------------------
+   Modal (re-auth gate)
+   -------------------------------------------------------------------------- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-box {
+  background: var(--white);
+  border-radius: var(--border-radius);
+  padding: 32px;
+  width: 380px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+}
+
+.modal-box h2 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--navy-bg);
+}
+
+/* --------------------------------------------------------------------------
+   Buttons (reuse existing .btn / .btn-primary pattern)
+   -------------------------------------------------------------------------- */
+.btn-sm {
+  padding: 6px 14px;
+  font-size: 13px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: opacity 0.15s;
+}
+
+.btn-sm:hover { opacity: 0.85; }
+
+.btn-primary-sm {
+  background: var(--navy-bg);
+  color: var(--white);
+}
+
+.btn-danger-sm {
+  background: #ef4444;
+  color: var(--white);
+}
+
+.btn-ghost-sm {
+  background: transparent;
+  border: 1px solid #e2e8f0;
+  color: var(--text-dark);
+}
+
+/* --------------------------------------------------------------------------
+   Empty state
+   -------------------------------------------------------------------------- */
+.empty-state {
+  padding: 48px;
+  text-align: center;
+  color: var(--gray-text);
+  font-size: 15px;
+}
+
+/* --------------------------------------------------------------------------
+   Misc
+   -------------------------------------------------------------------------- */
+.alert-error {
+  background: #fee2e2;
+  color: #991b1b;
+  padding: 12px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.alert-success {
+  background: #d1fae5;
+  color: #065f46;
+  padding: 12px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+}

@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../api/axiosInstance';
 import '../styles/leads.css'; // Reusing some table styles
 
 const StaffDashboardPage = () => {
     const { user } = useAuth();
+    const navigate = useNavigate();
     const [courses, setCourses] = useState([]);
     const [selectedCourse, setSelectedCourse] = useState(null);
     const [batches, setBatches] = useState([]);
@@ -73,6 +75,46 @@ const StaffDashboardPage = () => {
                 <h1>{user.role === 'super_admin' ? 'Admin' : 'Trainer'} Dashboard</h1>
                 <p>Manage batch capacities and schedules</p>
             </header>
+
+            {/* EPIC-08: HR & Admin Quick Links */}
+            {(user.role === 'hr' || user.role === 'super_admin') && (
+                <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 8 }}>
+                    <button
+                        onClick={() => navigate('/batches')}
+                        style={{ padding: '8px 16px', background: 'var(--navy-bg)', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 14, fontWeight: 600 }}
+                    >
+                        Batches
+                    </button>
+                    <button
+                        onClick={() => navigate('/hr/enrollments')}
+                        style={{ padding: '8px 16px', background: 'var(--navy-bg)', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 14, fontWeight: 600 }}
+                    >
+                        Enrollments
+                    </button>
+                    <button
+                        onClick={() => navigate('/hr/reports')}
+                        style={{ padding: '8px 16px', background: 'var(--navy-bg)', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 14, fontWeight: 600 }}
+                    >
+                        Reports
+                    </button>
+                    {user.role === 'super_admin' && (
+                        <>
+                            <button
+                                onClick={() => navigate('/admin/settings')}
+                                style={{ padding: '8px 16px', background: '#64748b', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 14, fontWeight: 600 }}
+                            >
+                                System Settings
+                            </button>
+                            <button
+                                onClick={() => navigate('/admin/analytics')}
+                                style={{ padding: '8px 16px', background: '#64748b', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 14, fontWeight: 600 }}
+                            >
+                                Analytics
+                            </button>
+                        </>
+                    )}
+                </div>
+            )}
 
             {error && <div className="alert alert-error">{error}</div>}
 

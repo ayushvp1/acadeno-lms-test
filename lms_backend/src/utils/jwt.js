@@ -9,7 +9,6 @@
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 
-<<<<<<< HEAD
 const fs = require('fs');
 const path = require('path');
 
@@ -36,13 +35,6 @@ try {
 } catch (err) {
   console.error('Error loading JWT RSA keys:', err.message);
 }
-=======
-// ---------------------------------------------------------------------------
-// Key loading — newlines are stored as literal "\n" in .env, restore them.
-// ---------------------------------------------------------------------------
-const PRIVATE_KEY = process.env.JWT_PRIVATE_KEY?.replace(/\\n/g, '\n');
-const PUBLIC_KEY  = process.env.JWT_PUBLIC_KEY?.replace(/\\n/g, '\n');
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
 
 const ACCESS_TOKEN_EXPIRY = process.env.JWT_ACCESS_EXPIRY
   ? `${process.env.JWT_ACCESS_EXPIRY}s`   // e.g. "900s" → 15 minutes
@@ -97,7 +89,6 @@ function verifyAccessToken(token) {
   });
 }
 
-<<<<<<< HEAD
 // ---------------------------------------------------------------------------
 // generateWizardToken({ user_id, role, email, lead_id })
 // ---------------------------------------------------------------------------
@@ -124,6 +115,3 @@ function generateWizardToken({ user_id, role, email, lead_id }) {
 }
 
 module.exports = { generateTokens, verifyAccessToken, generateWizardToken };
-=======
-module.exports = { generateTokens, verifyAccessToken };
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
