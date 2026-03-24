@@ -23,7 +23,7 @@ pool.on('error', (err) => {
 /**
  * Executes a PostgreSQL query while enforcing a specific user role.
  * This ensures that RLS policies are applied correctly.
- * 
+ *
  * @param {string} text   - The SQL query text.
  * @param {Array}  params - Parameterized values for the query.
  * @param {string} role   - The role of the user executing the query (defaults to 'student').
@@ -32,18 +32,13 @@ async function query(text, params, role = 'student') {
   const client = await pool.connect();
   try {
     // Set the session variable for RLS policies
-    // (Ensure you reset this or use transactions + SET LOCAL if your pooling strategy reuses connections intensely)
-<<<<<<< HEAD
     await client.query("SELECT set_config('app.current_user_role', $1::text, false)", [role]);
-=======
-    await client.query(`SET app.current_user_role = '${role}'`);
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
 
     const result = await client.query(text, params);
-    
+
     // Reset to prevent role leaking across pooled connections
     await client.query(`RESET app.current_user_role`);
-    
+
     return result;
   } finally {
     client.release();

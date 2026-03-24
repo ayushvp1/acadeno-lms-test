@@ -10,13 +10,10 @@ export const RegistrationProvider = ({ children }) => {
   const [registrationNumber, setRegistrationNumber] = useState(null);
   const [currentStep, setCurrentStep] = useState(1);
   const [mode, setMode] = useState('create'); // 'create', 'edit', 'view'
-<<<<<<< HEAD
   // guestMode: true when the wizard is accessed via a one-time invite link by a
   // converted lead.  Hides staff navigation and shows a credentials-focused
   // success screen after submission.
   const [guestMode, setGuestMode] = useState(false);
-=======
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -76,57 +73,24 @@ export const RegistrationProvider = ({ children }) => {
     try {
       let result;
       
-<<<<<<< HEAD
       let draftIdToUse = draftId;
 
       // Helper to parse FormData into object
       const parsePayload = (payload, isForm) => isForm ? Object.fromEntries(payload.entries()) : payload;
-
-=======
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
       // Step 1: Create or Update Draft
       if (stepNum === 1) {
         if (!draftId) {
           result = await registrationApi.createDraft(dataPayload, isFormData);
-<<<<<<< HEAD
           draftIdToUse = result.draft_id;
-=======
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
           setDraftId(result.draft_id);
           setRegistrationNumber(result.registration_number);
         } else {
           await registrationApi.updatePersonal(draftId, dataPayload, isFormData);
         }
-<<<<<<< HEAD
-        setFormData(prev => ({ ...prev, personal_details: { ...prev.personal_details, ...parsePayload(dataPayload, isFormData) } }));
-      // Step 2: Address
-      } else if (stepNum === 2) {
-        await registrationApi.updateAddress(draftId, dataPayload);
-        setFormData(prev => ({ ...prev, address_documents: { ...prev.address_documents, ...parsePayload(dataPayload, false) } }));
-      // Step 3: Academic
-      } else if (stepNum === 3) {
-        await registrationApi.updateAcademic(draftId, dataPayload, isFormData);
-        setFormData(prev => ({ ...prev, academic: { ...prev.academic, ...parsePayload(dataPayload, isFormData) } }));
-      // Step 4: Course
-      } else if (stepNum === 4) {
-        result = await registrationApi.updateCourse(draftId, dataPayload);
-=======
-      // Step 2: Address
-      } else if (stepNum === 2) {
-        await registrationApi.updateAddress(draftId, dataPayload);
-      // Step 3: Academic
-      } else if (stepNum === 3) {
-        await registrationApi.updateAcademic(draftId, dataPayload, isFormData);
-      // Step 4: Course
-      } else if (stepNum === 4) {
-        result = await registrationApi.updateCourse(draftId, dataPayload);
-        // Specifically update formData state for course_batch to immediately show fee summary
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
         setFormData(prev => ({
           ...prev,
           course_batch: {
             ...prev.course_batch,
-<<<<<<< HEAD
             ...parsePayload(dataPayload, false),
             base_fee: result.fee_summary?.base_fee,
             gst_amount: result.fee_summary?.gst_amount,
@@ -143,14 +107,6 @@ export const RegistrationProvider = ({ children }) => {
           academic: fullDraft.academic || null,
           course_batch: fullDraft.course_batch || null,
         });
-=======
-            ...dataPayload,
-            base_fee: result.fee_summary?.base_fee,
-            gst_amount: result.fee_summary?.gst_amount,
-            total_fee: result.fee_summary?.total_fee
-          }
-        }));
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
       }
 
       // If we are in create mode, advance step
@@ -176,13 +132,9 @@ export const RegistrationProvider = ({ children }) => {
     setIsLoading(true);
     setError(null);
     try {
-<<<<<<< HEAD
       const result = await registrationApi.submitDraft(draftId, { 
         privacy_consent: consent
       });
-=======
-      const result = await registrationApi.submitDraft(draftId, { privacy_consent: consent });
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
       return result;
     } catch (err) {
       setError(err.response?.data?.error || 'Submission failed');
@@ -212,10 +164,7 @@ export const RegistrationProvider = ({ children }) => {
     setCurrentStep(1);
     setHighestStep(1);
     setMode('create');
-<<<<<<< HEAD
     setGuestMode(false);
-=======
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
     setError(null);
     setFormData({
       personal_details: null,
@@ -233,11 +182,8 @@ export const RegistrationProvider = ({ children }) => {
     highestStep,
     mode,
     setMode,
-<<<<<<< HEAD
     guestMode,
     setGuestMode,
-=======
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
     isLoading,
     error,
     setError,

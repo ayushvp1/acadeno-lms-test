@@ -56,8 +56,6 @@ const LoginPage = () => {
       } else {
         const { user, accessToken } = response.data;
         login(user, accessToken);
-<<<<<<< HEAD
-        
         // Redirect logic based on role if no 'from' state exists
         if (!location.state?.from) {
           if (user.role === 'student') {
@@ -68,9 +66,6 @@ const LoginPage = () => {
         } else {
           navigate(from, { replace: true });
         }
-=======
-        navigate(from, { replace: true });
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
       }
     } catch (err) {
       const status = err.response?.status;

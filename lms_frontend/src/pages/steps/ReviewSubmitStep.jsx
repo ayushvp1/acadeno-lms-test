@@ -4,11 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { FeeSummaryCard } from './FeeSummaryCard';
 
 export const ReviewSubmitStep = () => {
-<<<<<<< HEAD
   const { formData, submitFinal, setMode, setCurrentStep, mode, guestMode, isLoading, error } = useRegistration();
-=======
-  const { formData, submitFinal, setMode, setCurrentStep, mode, isLoading, error } = useRegistration();
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
   const navigate = useNavigate();
   const [consent, setConsent] = useState(false);
   const [submissionSuccess, setSubmissionSuccess] = useState(null);
@@ -33,7 +29,6 @@ export const ReviewSubmitStep = () => {
   };
 
   if (submissionSuccess) {
-<<<<<<< HEAD
     // ---- Guest success screen (lead completed their own registration) ----
     if (guestMode) {
       // Auto-redirect to login after 10 seconds
@@ -73,23 +68,17 @@ export const ReviewSubmitStep = () => {
     }
 
     // ---- Staff success screen (BDA / HR submitted on behalf of student) ----
-=======
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
     return (
       <div className="step-card" style={{ textAlign: 'center', padding: '60px 20px' }}>
         <div style={{ width: '64px', height: '64px', borderRadius: '50%', backgroundColor: 'var(--success-bg)', color: 'var(--success)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '32px', margin: '0 auto 24px' }}>✓</div>
         <h2 style={{ fontSize: '24px', color: 'var(--navy-bg)', marginBottom: '12px' }}>Registration Submitted!</h2>
         <p style={{ color: 'var(--gray-text)', marginBottom: '8px' }}>Registration Number: <strong style={{ color: 'var(--text-dark)' }}>{submissionSuccess.registration_number}</strong></p>
-<<<<<<< HEAD
         <div style={{ margin: '24px auto', maxWidth: '420px', padding: '16px 20px', backgroundColor: '#eff6ff', borderRadius: '8px', border: '1px solid #bfdbfe', textAlign: 'left' }}>
           <p style={{ color: '#1e40af', fontWeight: '600', marginBottom: '6px' }}>Next Step: Complete Payment</p>
           <p style={{ color: '#3b82f6', fontSize: '14px' }}>
             A payment link has been sent to the student's email address. After successful payment, the student's login credentials will be shared.
           </p>
         </div>
-=======
-        <p style={{ color: 'var(--gray-text)', marginBottom: '32px' }}>A payment link has been sent to the student's email.</p>
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
         <button className="btn-primary" style={{ maxWidth: '200px', margin: '0 auto' }} onClick={() => navigate('/registrations')}>
           View Registrations List
         </button>
@@ -161,10 +150,7 @@ export const ReviewSubmitStep = () => {
         <FeeSummaryCard feeDetails={cb} />
       </div>
 
-<<<<<<< HEAD
 
-=======
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
       {!isViewOnly && (
         <>
           <label className="trust-device-label" style={{ justifyContent: 'flex-start', margin: '32px 0', fontSize: '15px' }}>
@@ -174,14 +160,10 @@ export const ReviewSubmitStep = () => {
               onChange={(e) => setConsent(e.target.checked)}
             />
             <span style={{ color: 'var(--text-dark)' }}>
-<<<<<<< HEAD
               {guestMode
                 ? <>I have read and agreed to the <a href="#" style={{ color: 'var(--primary-blue)', textDecoration: 'underline' }}>Privacy Notice</a> under DPDP Act requirements.</>
                 : <>I confirm that the student has read and agreed to the <a href="#" style={{ color: 'var(--primary-blue)', textDecoration: 'underline' }}>Privacy Notice</a> under DPDP Act requirements.</>
               }
-=======
-              I confirm that the student has read and agreed to the <a href="#" style={{ color: 'var(--primary-blue)', textDecoration: 'underline' }}>Privacy Notice</a> under DPDP Act requirements.
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
             </span>
           </label>
 

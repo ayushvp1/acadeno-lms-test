@@ -18,17 +18,11 @@ export const AuthProvider = ({ children }) => {
 
   const fetchCurrentUser = async () => {
     try {
-      // 1. Call GET /api/auth/me with plain axios (no interceptor)
-      const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || ''}/api/auth/me`,
-        { withCredentials: true }
-      );
-      
+      const response = await axiosInstance.get('/api/auth/me');
       setUser(response.data);
     } catch (error) {
-      // 2. If it returns 401 — just set user = null and stop (silent catch)
+      // Logic handled by axiosInstance interceptors (redirect to login if refresh fails)
       setUser(null);
-      setAccessToken(null);
     } finally {
       setLoading(false); 
     }
@@ -57,7 +51,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider value={{ user, isAuthenticated: !!user, loading, login, logout }}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 };

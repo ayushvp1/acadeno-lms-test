@@ -9,7 +9,6 @@
 const crypto = require('crypto');
 const { pool } = require('../db/index');
 const { lookupPinCode } = require('../services/pinCodeService');
-<<<<<<< HEAD
 const { 
   sendPaymentLinkEmail, 
   sendWelcomeCredentialsEmail,
@@ -17,9 +16,6 @@ const {
 } = require('../services/emailService');
 const { generateTokens } = require('../utils/jwt');
 const redis = require('../utils/redis');
-=======
-const { sendPaymentLinkEmail } = require('../services/emailService');
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
 const { getUploadedFilePath } = require('../services/fileService');
 const bcrypt = require('bcrypt');
 
@@ -31,7 +27,6 @@ const ADULT_AGE = 18;
 const GST_RATE = 0.18;
 const BCRYPT_ROUNDS = 12;
 
-<<<<<<< HEAD
 // Refresh token cookie options (matches authController)
 const REFRESH_COOKIE_OPTIONS = {
   httpOnly: true,
@@ -41,8 +36,6 @@ const REFRESH_COOKIE_OPTIONS = {
   maxAge:   (parseInt(process.env.JWT_REFRESH_EXPIRY, 10) || 604800) * 1000,
 };
 
-=======
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
 // ---------------------------------------------------------------------------
 // Helper: calculate age from DOB
 // ---------------------------------------------------------------------------
@@ -150,7 +143,6 @@ async function createDraft(req, res) {
     // ---- Generate registration number ----
     const registrationNumber = generateRegistrationNumber();
 
-<<<<<<< HEAD
     // ---- Resolve lead_id ----
     // For converted leads (lead_registrant role), the lead_id is embedded in the
     // wizard JWT so they cannot forge a different lead's ID.  For staff users, it
@@ -159,19 +151,13 @@ async function createDraft(req, res) {
       ? req.user.lead_id
       : (lead_id || null);
 
-=======
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
     // ---- Insert draft ----
     const result = await client.query(
       `INSERT INTO registration_drafts
          (registration_number, personal_details, registered_by, lead_id, status)
        VALUES ($1, $2, $3, $4, 'draft')
        RETURNING id, registration_number, created_at`,
-<<<<<<< HEAD
       [registrationNumber, JSON.stringify(personalDetails), req.user.user_id, effectiveLeadId]
-=======
-      [registrationNumber, JSON.stringify(personalDetails), req.user.user_id, lead_id || null]
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
     );
 
     return res.status(201).json({
@@ -262,7 +248,6 @@ async function updatePersonal(req, res) {
       personalDetails.profile_photo_path = getUploadedFilePath(req.file);
     }
 
-<<<<<<< HEAD
     const effectiveLeadId = req.user.role === 'lead_registrant' ? req.user.lead_id : null;
 
     await client.query(
@@ -272,14 +257,6 @@ async function updatePersonal(req, res) {
               updated_at = NOW()
         WHERE id = $3`,
       [JSON.stringify(personalDetails), effectiveLeadId, id]
-=======
-    await client.query(
-      `UPDATE registration_drafts
-          SET personal_details = $1,
-              updated_at       = NOW()
-        WHERE id = $2`,
-      [JSON.stringify(personalDetails), id]
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
     );
 
     return res.status(200).json({ message: 'Personal details updated' });
@@ -361,7 +338,6 @@ async function updateAddress(req, res) {
       pan_number:     pan_number || null,
     };
 
-<<<<<<< HEAD
     const effectiveLeadId = req.user.role === 'lead_registrant' ? req.user.lead_id : null;
 
     await client.query(
@@ -371,14 +347,6 @@ async function updateAddress(req, res) {
               updated_at        = NOW()
         WHERE id = $3`,
       [JSON.stringify(addressDocuments), effectiveLeadId, id]
-=======
-    await client.query(
-      `UPDATE registration_drafts
-          SET address_documents = $1,
-              updated_at        = NOW()
-        WHERE id = $2`,
-      [JSON.stringify(addressDocuments), id]
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
     );
 
     return res.status(200).json({ message: 'Address and documents updated' });
@@ -448,7 +416,6 @@ async function updateAcademic(req, res) {
       academic.marksheet_path = getUploadedFilePath(req.file);
     }
 
-<<<<<<< HEAD
     const effectiveLeadId = req.user.role === 'lead_registrant' ? req.user.lead_id : null;
 
     await client.query(
@@ -458,14 +425,6 @@ async function updateAcademic(req, res) {
               updated_at = NOW()
         WHERE id = $3`,
       [JSON.stringify(academic), effectiveLeadId, id]
-=======
-    await client.query(
-      `UPDATE registration_drafts
-          SET academic   = $1,
-              updated_at = NOW()
-        WHERE id = $2`,
-      [JSON.stringify(academic), id]
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
     );
 
     return res.status(200).json({ message: 'Academic details updated' });
@@ -567,7 +526,6 @@ async function updateCourse(req, res) {
       total_fee:   totalFee,
     };
 
-<<<<<<< HEAD
     const effectiveLeadId = req.user.role === 'lead_registrant' ? req.user.lead_id : null;
 
     await client.query(
@@ -577,14 +535,6 @@ async function updateCourse(req, res) {
               updated_at = NOW()
         WHERE id = $3`,
       [JSON.stringify(courseBatch), effectiveLeadId, id]
-=======
-    await client.query(
-      `UPDATE registration_drafts
-          SET course_batch = $1,
-              updated_at   = NOW()
-        WHERE id = $2`,
-      [JSON.stringify(courseBatch), id]
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
     );
 
     return res.status(200).json({
@@ -676,7 +626,6 @@ async function submitRegistration(req, res) {
       const ac = draft.academic;
       const cb = draft.course_batch;
 
-<<<<<<< HEAD
       // 1. Create user account
       // Use user-provided password if available (e.g., from wizard final step), 
       // else auto-generate a secure temporary one.
@@ -698,32 +647,19 @@ async function submitRegistration(req, res) {
       // Use xmax trick: xmax = 0 means the row was freshly INSERTed;
       // xmax > 0 means ON CONFLICT triggered an UPDATE (existing user).
       // We only send welcome credentials when a brand-new account is created.
-=======
-      // 1. Create user account (role = student, random temporary password)
-      const tempPassword = crypto.randomBytes(16).toString('hex');
-      const passwordHash = await bcrypt.hash(tempPassword, BCRYPT_ROUNDS);
-
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
       const userResult = await client.query(
         `INSERT INTO users (email, password_hash, role, is_active, mfa_enabled)
          VALUES ($1, $2, 'student', TRUE, FALSE)
          ON CONFLICT (email) DO UPDATE SET updated_at = NOW()
-<<<<<<< HEAD
          RETURNING id, (xmax = 0) AS is_new_user`,
-=======
-         RETURNING id`,
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
         [pd.email, passwordHash]
       );
 
       const userId = userResult.rows[0].id;
-<<<<<<< HEAD
       
       // Store temporary password in Redis for 24 hours so it can be sent after payment
       // Key format: temp_password:{user_id}
       await redis.set(`temp_password:${userId}`, finalPassword, 'EX', 86400);
-=======
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
 
       // 2. Create students record
       const studentResult = await client.query(
@@ -785,7 +721,6 @@ async function submitRegistration(req, res) {
         [id]
       );
 
-<<<<<<< HEAD
       // 5b. Update Lead Status if applicable
       if (draft.lead_id) {
         await client.query(
@@ -839,24 +774,12 @@ async function submitRegistration(req, res) {
       }
 
       // TODO: SMS (Twilio/MSG91) — send payment link via SMS alongside email
-=======
-      // ---- Commit transaction ----
-      await client.query('COMMIT');
-
-      // 6. Fire-and-forget: send payment link email
-      const paymentUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment/${enrollmentId}`;
-      sendPaymentLinkEmail(pd.email, pd.first_name, paymentUrl, draft.registration_number).catch((err) => {
-        console.error('Failed to send payment link email:', err.message);
-      });
-      // TODO: SMS (Twilio/MSG91) — Send payment link via SMS alongside email
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
 
       return res.status(201).json({
         message:             'Registration submitted successfully',
         registration_number: draft.registration_number,
         student_id:          studentId,
         enrollment_id:       enrollmentId,
-<<<<<<< HEAD
         credentials_sent:    isNewUser,  // Let the frontend know if a credentials email was sent
       });
     } catch (txErr) {
@@ -877,17 +800,6 @@ async function submitRegistration(req, res) {
       details: err.message,
       stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
     });
-=======
-      });
-    } catch (txErr) {
-      await client.query('ROLLBACK');
-      throw txErr;
-    }
-  } catch (err) {
-    console.error('SUBMIT REGISTRATION ERROR:', err.message);
-    console.error('STACK:', err.stack);
-    return res.status(500).json({ error: 'Internal server error' });
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
   } finally {
     client.release();
   }
@@ -1039,14 +951,11 @@ async function getRegistration(req, res) {
       return res.status(403).json({ error: 'Insufficient permissions', code: 'FORBIDDEN' });
     }
 
-<<<<<<< HEAD
     // ---- Guest (Lead) can only see their own registration ----
     if (req.user.role === 'lead_registrant' && String(draft.lead_id) !== String(req.user.lead_id)) {
       return res.status(403).json({ error: 'Insufficient permissions (Lead mismatch)', code: 'FORBIDDEN' });
     }
 
-=======
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
     return res.status(200).json(draft);
   } catch (err) {
     console.error('GET REGISTRATION ERROR:', err.message);
@@ -1078,7 +987,6 @@ async function editRegistration(req, res) {
 
     const draft = draftResult.rows[0];
 
-<<<<<<< HEAD
     // ---- Authorization Check ----
     if (req.user.role === 'bda' && draft.registered_by !== req.user.user_id) {
       return res.status(403).json({ error: 'Insufficient permissions', code: 'FORBIDDEN' });
@@ -1087,8 +995,6 @@ async function editRegistration(req, res) {
       return res.status(403).json({ error: 'Insufficient permissions (Lead mismatch)', code: 'FORBIDDEN' });
     }
 
-=======
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
     // ---- Status-based edit lock (US-REG-08) ----
     if (draft.status === 'active' && req.user.role !== 'super_admin') {
       return res.status(403).json({
@@ -1185,7 +1091,6 @@ async function editRegistration(req, res) {
   }
 }
 
-<<<<<<< HEAD
 // ---------------------------------------------------------------------------
 // POST /api/registration/payment-webhook
 // Payment success webhook handler
@@ -1451,8 +1356,6 @@ async function updateBatch(req, res) {
 
 
 
-=======
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
 module.exports = {
   createDraft,
   updatePersonal,
@@ -1463,12 +1366,9 @@ module.exports = {
   listRegistrations,
   getRegistration,
   editRegistration,
-<<<<<<< HEAD
   handlePaymentSuccess,
   listCourses,
   listBatches,
   listPinCode,
   updateBatch,
-=======
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
 };

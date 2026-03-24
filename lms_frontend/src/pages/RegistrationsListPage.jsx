@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { registrationApi } from '../api/registrationApi';
 
-export const RegistrationsListPage = () => {
+const RegistrationsListPage = () => {
   const navigate = useNavigate();
   const [registrations, setRegistrations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -138,3 +138,5 @@ export const RegistrationsListPage = () => {
     </div>
   );
 };
+
+export default RegistrationsListPage;

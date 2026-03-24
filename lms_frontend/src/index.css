@@ -179,7 +179,6 @@ html, body {
   cursor: not-allowed;
 }
 
-<<<<<<< HEAD
 .btn-secondary {
   padding: 12px 24px;
   background-color: var(--gray-light);
@@ -217,8 +216,6 @@ html, body {
   color: var(--white);
 }
 
-=======
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
 .btn-link {
   background: none;
   border: none;
@@ -475,7 +472,6 @@ html, body {
   line-height: 1.5;
 }
 
-<<<<<<< HEAD
 /* RESPONSIVE */
 @media (max-width: 768px) {
   .dashboard-sidebar { display: none; }
@@ -483,27 +479,9 @@ html, body {
   .auth-card { padding: 30px 20px; }
   .otp-box { width: 40px; height: 48px; font-size: 20px; }
 }
+
 /* ---------------------------------
    WIZARD UI (Registration)
------------------------------------- */
-.wizard-progress {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 40px;
-  position: relative;
-  padding: 0 10px;
-}
-
-.wizard-progress::before {
-  content: '';
-  position: absolute;
-  top: 18px;
-  left: 0;
-  right: 0;
-=======
-/* ---------------------------------
-   EPIC-03: REGISTRATION WIZARD
 ------------------------------------ */
 .wizard-container {
   max-width: 800px;
@@ -513,32 +491,27 @@ html, body {
 
 .wizard-progress {
   display: flex;
-  margin-bottom: 32px;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 40px;
+  position: relative;
+  padding: 20px;
   background: var(--white);
   border-radius: var(--border-radius);
-  padding: 20px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
-.progress-step {
-  flex: 1;
-  text-align: center;
-  position: relative;
-}
-
-.progress-step:not(:last-child)::after {
+.wizard-progress::before {
   content: '';
   position: absolute;
-  top: 15px;
-  right: -50%;
-  width: 100%;
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
+  top: 38px;
+  left: 40px;
+  right: 40px;
   height: 2px;
   background-color: var(--gray-border);
   z-index: 1;
 }
 
-<<<<<<< HEAD
 .progress-step {
   display: flex;
   flex-direction: column;
@@ -549,7 +522,21 @@ html, body {
   position: relative;
 }
 
-.progress-step .step-circle {
+.progress-step.completed .step-circle {
+  background-color: var(--success);
+  border-color: var(--success);
+  color: var(--white);
+}
+
+.progress-step.active .step-circle {
+  border-color: var(--primary-blue);
+  color: var(--white);
+  background-color: var(--primary-blue);
+  transform: scale(1.1);
+  box-shadow: 0 0 15px rgba(37, 99, 235, 0.2);
+}
+
+.step-circle {
   width: 36px;
   height: 36px;
   background-color: var(--white);
@@ -562,79 +549,21 @@ html, body {
   font-weight: 700;
   font-size: 14px;
   transition: all 0.3s ease;
-  box-shadow: 0 0 0 4px var(--bg-light, #f8fafc);
-}
-
-.progress-step.active .step-circle {
-  border-color: var(--primary-blue);
-  color: var(--primary-blue);
-  background-color: var(--white);
-  transform: scale(1.1);
-  box-shadow: 0 0 15px rgba(37, 99, 235, 0.2);
-=======
-.progress-step.completed:not(:last-child)::after,
-.progress-step.active:not(:last-child)::after {
-  background-color: var(--primary-blue);
-}
-
-.step-circle {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background-color: var(--gray-border);
-  color: var(--gray-text);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-  margin: 0 auto 8px;
-  position: relative;
-  z-index: 2;
-  transition: all 0.3s;
-}
-
-.progress-step.active .step-circle {
-  background-color: var(--primary-blue);
-  color: var(--white);
-  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.2);
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
-}
-
-.progress-step.completed .step-circle {
-  background-color: var(--success);
-<<<<<<< HEAD
-  border-color: var(--success);
-  color: var(--white);
-}
-
-.progress-step .step-label {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--gray-text);
-  text-align: center;
-  max-width: 100px;
-=======
-  color: var(--white);
 }
 
 .step-label {
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--gray-text);
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
+  text-align: center;
 }
 
 .progress-step.active .step-label {
   color: var(--primary-blue);
-<<<<<<< HEAD
-=======
-  font-weight: 600;
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
 }
 
 .step-card {
   background-color: var(--white);
-<<<<<<< HEAD
   padding: 40px;
   border-radius: 16px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
@@ -663,53 +592,21 @@ html, body {
 .step-subtitle {
   color: var(--gray-text);
   font-size: 14px;
-=======
-  border-radius: var(--border-radius);
-  padding: 32px;
-  box-shadow: var(--glow-shadow);
-  animation: fadeIn 0.3s ease;
-}
-
-.step-header {
-  margin-bottom: 24px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid var(--gray-border);
-}
-
-.step-title {
-  font-size: 20px;
-  color: var(--navy-bg);
-  margin-bottom: 4px;
-}
-
-.step-subtitle {
-  font-size: 14px;
-  color: var(--gray-text);
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
 }
 
 .form-grid {
   display: grid;
-<<<<<<< HEAD
   grid-template-columns: repeat(2, 1fr);
   gap: 24px;
 }
 
 .full-width {
-=======
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-}
-
-.form-grid .full-width {
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
   grid-column: 1 / -1;
 }
 
 .wizard-actions {
   display: flex;
   justify-content: space-between;
-<<<<<<< HEAD
   margin-top: 40px;
   padding-top: 24px;
   border-top: 1px solid var(--gray-border);
@@ -719,13 +616,14 @@ html, body {
   .form-grid {
     grid-template-columns: 1fr;
   }
-  .progress-step .step-label {
+  .step-label {
     display: none;
   }
   .step-card {
     padding: 24px;
   }
 }
+
 /* ---------------------------------
    REVIEW STEP STYLES
 ------------------------------------ */
@@ -735,43 +633,12 @@ html, body {
   padding: 24px;
   border-radius: 12px;
   border: 1px solid var(--gray-border);
-=======
-  margin-top: 32px;
-  padding-top: 20px;
-  border-top: 1px solid var(--gray-border);
-}
-
-.btn-secondary {
-  padding: 12px 24px;
-  background-color: var(--white);
-  color: var(--text-dark);
-  border: 1px solid var(--gray-border);
-  border-radius: 8px;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-secondary:hover {
-  background-color: var(--gray-light);
-  border-color: #cbd5e1;
-}
-
-/* Review Step specific */
-.review-section {
-  margin-bottom: 24px;
-  padding: 20px;
-  background-color: var(--gray-light);
-  border-radius: 8px;
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
 }
 
 .review-section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-<<<<<<< HEAD
   margin-bottom: 20px;
   border-bottom: 1px solid var(--gray-border);
   padding-bottom: 12px;
@@ -783,27 +650,12 @@ html, body {
   color: var(--navy-bg);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-=======
-  margin-bottom: 16px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--gray-border);
-}
-
-.review-section-title {
-  font-weight: 600;
-  color: var(--navy-bg);
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
 }
 
 .review-grid {
   display: grid;
-<<<<<<< HEAD
   grid-template-columns: repeat(2, 1fr);
   gap: 16px;
-=======
-  grid-template-columns: 1fr 1fr;
-  gap: 12px 24px;
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
 }
 
 .review-item {
@@ -814,18 +666,13 @@ html, body {
 
 .review-label {
   font-size: 12px;
-<<<<<<< HEAD
   font-weight: 600;
   color: var(--gray-text);
   text-transform: uppercase;
-=======
-  color: var(--gray-text);
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
 }
 
 .review-value {
   font-size: 14px;
-<<<<<<< HEAD
   color: var(--text-dark);
   font-weight: 500;
 }
@@ -838,9 +685,6 @@ html, body {
   .review-grid {
     grid-template-columns: 1fr;
   }
-=======
-  font-weight: 500;
-  color: var(--text-dark);
 }
 
 /* ---------------------------------
@@ -903,12 +747,3 @@ html, body {
 .status-draft { background: #f1f5f9; color: #475569; }
 .status-pending_payment { background: #fffbeb; color: #d97706; }
 .status-active { background: #ecfdf5; color: #059669; }
-
-/* RESPONSIVE */
-@media (max-width: 768px) {
-  .dashboard-sidebar { display: none; }
-  .user-info { display: none; }
-  .auth-card { padding: 30px 20px; }
-  .otp-box { width: 40px; height: 48px; font-size: 20px; }
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
-}
