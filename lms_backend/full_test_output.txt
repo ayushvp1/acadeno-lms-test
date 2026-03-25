@@ -1,0 +1,198 @@
+PASS src/__tests__/auth.mfa.test.js
+  ● Console
+
+    console.error
+      Verify MFA error: DB gone
+
+    [0m [90m 731 |[39m     [36mreturn[39m [36mawait[39m issueTokensAndRespond(req[33m,[39m res[33m,[39m client[33m,[39m user)[33m;[39m
+     [90m 732 |[39m   } [36mcatch[39m (err) {
+    [31m[1m>[22m[39m[90m 733 |[39m     console[33m.[39merror([32m'Verify MFA error:'[39m[33m,[39m err[33m.[39mmessage)[33m;[39m
+     [90m     |[39m             [31m[1m^[22m[39m
+     [90m 734 |[39m     [36mreturn[39m res[33m.[39mstatus([35m500[39m)[33m.[39mjson({ error[33m:[39m [32m'Internal server error'[39m })[33m;[39m
+     [90m 735 |[39m   } [36mfinally[39m {
+     [90m 736 |[39m     client[33m.[39mrelease()[33m;[39m[0m
+
+      at error (src/controllers/authController.js:733:13)
+
+PASS src/__tests__/auth.otp.test.js
+  ● Console
+
+    console.error
+      Forgot password error: Redis down
+
+    [0m [90m 544 |[39m     [36mreturn[39m res[33m.[39mstatus([35m200[39m)[33m.[39mjson({ message[33m:[39m successMessage })[33m;[39m
+     [90m 545 |[39m   } [36mcatch[39m (err) {
+    [31m[1m>[22m[39m[90m 546 |[39m     console[33m.[39merror([32m'Forgot password error:'[39m[33m,[39m err[33m.[39mmessage)[33m;[39m
+     [90m     |[39m             [31m[1m^[22m[39m
+     [90m 547 |[39m     [36mreturn[39m res[33m.[39mstatus([35m500[39m)[33m.[39mjson({ error[33m:[39m [32m'Internal server error'[39m })[33m;[39m
+     [90m 548 |[39m   } [36mfinally[39m {
+     [90m 549 |[39m     client[33m.[39mrelease()[33m;[39m[0m
+
+      at error (src/controllers/authController.js:546:13)
+
+    console.error
+      Reset password error: DB down
+
+    [0m [90m 644 |[39m     })[33m;[39m
+     [90m 645 |[39m   } [36mcatch[39m (err) {
+    [31m[1m>[22m[39m[90m 646 |[39m     console[33m.[39merror([32m'Reset password error:'[39m[33m,[39m err[33m.[39mmessage)[33m;[39m
+     [90m     |[39m             [31m[1m^[22m[39m
+     [90m 647 |[39m     [36mreturn[39m res[33m.[39mstatus([35m500[39m)[33m.[39mjson({ error[33m:[39m [32m'Internal server error'[39m })[33m;[39m
+     [90m 648 |[39m   } [36mfinally[39m {
+     [90m 649 |[39m     client[33m.[39mrelease()[33m;[39m[0m
+
+      at error (src/controllers/authController.js:646:13)
+
+PASS src/__tests__/auth.login.test.js (5.283 s)
+  ● Console
+
+    console.log
+      [dotenv@17.3.1] injecting env (15) from .env -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+
+      at _log (node_modules/dotenv/lib/main.js:139:11)
+
+    console.log
+      Redis connected
+
+      at EventEmitter.log (src/utils/redis.js:15:11)
+
+    console.error
+      Login error: Cannot read properties of undefined (reading 'length')
+
+    [0m [90m 268 |[39m   } [36mcatch[39m (err) {
+     [90m 269 |[39m     [90m// ---- 9. Unexpected errors — never leak internals ----[39m
+    [31m[1m>[22m[39m[90m 270 |[39m     console[33m.[39merror([32m'Login error:'[39m[33m,[39m err[33m.[39mmessage)[33m;[39m
+     [90m     |[39m             [31m[1m^[22m[39m
+     [90m 271 |[39m     [36mreturn[39m res[33m.[39mstatus([35m500[39m)[33m.[39mjson({ error[33m:[39m [32m'Internal server error'[39m })[33m;[39m
+     [90m 272 |[39m   } [36mfinally[39m {
+     [90m 273 |[39m     client[33m.[39mrelease()[33m;[39m[0m
+
+      at error (src/controllers/authController.js:270:13)
+
+PASS src/__tests__/leads.create.test.js
+  ● Console
+
+    console.log
+      [dotenv@17.3.1] injecting env (15) from .env -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+
+      at _log (node_modules/dotenv/lib/main.js:139:11)
+
+    console.log
+      [dotenv@17.3.1] injecting env (0) from .env -- tip: ⚙️  enable debug logging with { debug: true }
+
+      at _log (node_modules/dotenv/lib/main.js:139:11)
+
+    console.log
+      Redis connected
+
+      at EventEmitter.log (src/utils/redis.js:15:11)
+
+PASS src/__tests__/leads.conversion.test.js
+  ● Console
+
+    console.log
+      [dotenv@17.3.1] injecting env (15) from .env -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+
+      at _log (node_modules/dotenv/lib/main.js:139:11)
+
+    console.log
+      [dotenv@17.3.1] injecting env (0) from .env -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+
+      at _log (node_modules/dotenv/lib/main.js:139:11)
+
+    console.log
+      Redis connected
+
+      at EventEmitter.log (src/utils/redis.js:15:11)
+
+PASS src/__tests__/registration.test.js
+PASS src/__tests__/epic05.test.js
+PASS src/__tests__/leads.status.test.js
+  ● Console
+
+    console.log
+      [dotenv@17.3.1] injecting env (15) from .env -- tip: ⚙️  suppress all logs with { quiet: true }
+
+      at _log (node_modules/dotenv/lib/main.js:139:11)
+
+    console.log
+      [dotenv@17.3.1] injecting env (0) from .env -- tip: ⚙️  write to custom object with { processEnv: myObject }
+
+      at _log (node_modules/dotenv/lib/main.js:139:11)
+
+    console.log
+      Redis connected
+
+      at EventEmitter.log (src/utils/redis.js:15:11)
+
+PASS src/__tests__/leads.notes.test.js
+  ● Console
+
+    console.log
+      [dotenv@17.3.1] injecting env (15) from .env -- tip: ⚙️  enable debug logging with { debug: true }
+
+      at _log (node_modules/dotenv/lib/main.js:139:11)
+
+    console.log
+      [dotenv@17.3.1] injecting env (0) from .env -- tip: ⚡️ secrets for agents: https://dotenvx.com/as2
+
+      at _log (node_modules/dotenv/lib/main.js:139:11)
+
+    console.log
+      Redis connected
+
+      at EventEmitter.log (src/utils/redis.js:15:11)
+
+PASS src/__tests__/leads.dashboard.test.js
+  ● Console
+
+    console.log
+      [dotenv@17.3.1] injecting env (15) from .env -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+
+      at _log (node_modules/dotenv/lib/main.js:139:11)
+
+PASS src/__tests__/leads.list.test.js
+  ● Console
+
+    console.log
+      [dotenv@17.3.1] injecting env (15) from .env -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+      at _log (node_modules/dotenv/lib/main.js:139:11)
+
+    console.log
+      [dotenv@17.3.1] injecting env (0) from .env -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+
+      at _log (node_modules/dotenv/lib/main.js:139:11)
+
+    console.log
+      Redis connected
+
+      at EventEmitter.log (src/utils/redis.js:15:11)
+
+PASS src/__tests__/lead.jobs.test.js
+PASS src/__tests__/leads.import.test.js
+  ● Console
+
+    console.log
+      [dotenv@17.3.1] injecting env (15) from .env -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+
+      at _log (node_modules/dotenv/lib/main.js:139:11)
+
+    console.log
+      [dotenv@17.3.1] injecting env (0) from .env -- tip: ⚙️  enable debug logging with { debug: true }
+
+      at _log (node_modules/dotenv/lib/main.js:139:11)
+
+    console.log
+      Redis connected
+
+      at EventEmitter.log (src/utils/redis.js:15:11)
+
+A worker process has failed to exit gracefully and has been force exited. This is likely caused by tests leaking due to improper teardown. Try running with --detectOpenHandles to find leaks. Active timers can also cause this, ensure that .unref() was called on them.
+
+Test Suites: 13 passed, 13 total
+Tests:       92 passed, 92 total
+Snapshots:   0 total
+Time:        11.499 s
+Ran all test suites.
+Force exiting Jest: Have you considered using `--detectOpenHandles` to detect async operations that kept running after all tests finished?
