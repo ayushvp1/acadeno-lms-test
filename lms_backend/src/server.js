@@ -1,5 +1,5 @@
 require('dotenv').config();
-const app   = require('./app');
+const app = require('./app');
 const { pool } = require('./db/index');
 const redis = require('./utils/redis');
 
