@@ -133,6 +133,30 @@ html, body {
   padding-left: 42px;
 }
 
+.auth-input.has-peek {
+  padding-right: 42px;
+}
+
+.input-peek-btn {
+  position: absolute;
+  right: 12px;
+  background: none;
+  border: none;
+  color: var(--gray-text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.input-peek-btn:hover {
+  color: var(--primary-blue);
+  background-color: var(--gray-light);
+}
+
 .auth-input:focus {
   outline: none;
   border-color: var(--primary-blue);
@@ -419,10 +443,22 @@ html, body {
   width: 260px;
   background-color: var(--white);
   border-right: 1px solid var(--gray-border);
-  padding: 24px 16px;
+  padding: 16px 12px; /* Reduced padding */
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px; /* Reduced gap */
+  overflow-y: auto; /* Enable scroll */
+  scrollbar-width: thin;
+  scrollbar-color: var(--gray-border) transparent;
+}
+
+.dashboard-sidebar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.dashboard-sidebar::-webkit-scrollbar-thumb {
+  background: var(--gray-border);
+  border-radius: 10px;
 }
 
 .sidebar-item {

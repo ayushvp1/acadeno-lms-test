@@ -32,8 +32,9 @@ const DashboardPage = () => {
             className={`sidebar-item ${location.pathname === '/dashboard' ? 'active' : ''}`}
             onClick={() => navigate('/dashboard')}
           >
-            {user?.role === 'super_admin' || user?.role === 'trainer' ? 'Batch Management' : 'Dashboard'}
+            {user?.role === 'super_admin' ? 'Executive Overview' : user?.role === 'trainer' ? 'Batch Management' : 'Dashboard'}
           </div>
+
 
           {(user?.role === 'hr' || user?.role === 'bda' || user?.role === 'super_admin') && (
             <div 
@@ -46,7 +47,13 @@ const DashboardPage = () => {
 
           {isBdaArea && (
             <>
-              <div style={{ margin: '16px 0 8px 16px', fontSize: '11px', fontWeight: 600, color: 'var(--gray-text)', textTransform: 'uppercase', opacity: 0.7 }}>Lead Management</div>
+              <div style={{ margin: '12px 0 4px 16px', fontSize: '10px', fontWeight: 600, color: 'var(--gray-text)', textTransform: 'uppercase', opacity: 0.6, letterSpacing: '0.05em' }}>Lead Management</div>
+              <div 
+                className={`sidebar-item ${location.pathname === '/leads/dashboard' ? 'active' : ''}`}
+                onClick={() => navigate('/leads/dashboard')}
+              >
+                Lead Analytics
+              </div>
               <div 
                 className={`sidebar-item ${location.pathname === '/leads' ? 'active' : ''}`}
                 onClick={() => navigate('/leads')}
@@ -62,17 +69,34 @@ const DashboardPage = () => {
             </>
           )}
 
-          <div style={{ margin: '16px 0 8px 16px', fontSize: '11px', fontWeight: 600, color: 'var(--gray-text)', textTransform: 'uppercase', opacity: 0.7 }}>Acadeno Learning</div>
-          
-          <div 
-            className={`sidebar-item ${location.pathname === '/courses' ? 'active' : ''}`}
-            onClick={() => navigate('/courses')}
-          >
-            Course Directory
-          </div>
-
+          {/* HR Management Section */}
           {(user?.role === 'hr' || user?.role === 'super_admin') && (
             <>
+              <div style={{ margin: '16px 0 4px 16px', fontSize: '10px', fontWeight: 600, color: 'var(--gray-text)', textTransform: 'uppercase', opacity: 0.6, letterSpacing: '0.05em' }}>HR Management</div>
+              <div 
+                className={`sidebar-item ${location.pathname === '/admin/analytics' ? 'active' : ''}`}
+                onClick={() => navigate('/admin/analytics')}
+              >
+                HR Overview
+              </div>
+              <div 
+                className={`sidebar-item ${location.pathname === '/hr/batches' ? 'active' : ''}`}
+                onClick={() => navigate('/hr/batches')}
+              >
+                Batch Management
+              </div>
+              <div 
+                className={`sidebar-item ${location.pathname === '/hr/trainer-pool' ? 'active' : ''}`}
+                onClick={() => navigate('/hr/trainer-pool')}
+              >
+                Trainer Pool
+              </div>
+              <div 
+                className={`sidebar-item ${location.pathname === '/hr/enrollments' ? 'active' : ''}`}
+                onClick={() => navigate('/hr/enrollments')}
+              >
+                Student Directory
+              </div>
               <div 
                 className={`sidebar-item ${location.pathname === '/hr/courses' ? 'active' : ''}`}
                 onClick={() => navigate('/hr/courses')}
@@ -80,13 +104,28 @@ const DashboardPage = () => {
                 Course Admin
               </div>
               <div 
+                className={`sidebar-item ${location.pathname === '/hr/reports' ? 'active' : ''}`}
+                onClick={() => navigate('/hr/reports')}
+              >
+                Audit Reports
+              </div>
+              <div 
                 className={`sidebar-item ${location.pathname === '/hr/student-stats' ? 'active' : ''}`}
                 onClick={() => navigate('/hr/student-stats')}
               >
-                Student Stats
+                Student Insights
               </div>
             </>
           )}
+
+          <div style={{ margin: '12px 0 4px 16px', fontSize: '10px', fontWeight: 600, color: 'var(--gray-text)', textTransform: 'uppercase', opacity: 0.6 }}>Catalog</div>
+          <div 
+            className={`sidebar-item ${location.pathname === '/courses' ? 'active' : ''}`}
+            onClick={() => navigate('/courses')}
+          >
+            Course Directory
+          </div>
+
           {user?.role === 'trainer' && (
             <>
               <div 
@@ -106,11 +145,16 @@ const DashboardPage = () => {
           
           {user?.role === 'super_admin' && (
             <>
-              <div style={{ margin: '16px 0 8px 16px', fontSize: '11px', fontWeight: 600, color: 'var(--gray-text)', textTransform: 'uppercase', opacity: 0.7 }}>Administration</div>
-              <div className="sidebar-item">Users</div>
-              <div className="sidebar-item">System Settings</div>
+              <div style={{ margin: '12px 0 4px 16px', fontSize: '10px', fontWeight: 600, color: 'var(--gray-text)', textTransform: 'uppercase', opacity: 0.6 }}>Administration</div>
+              <div 
+                className={`sidebar-item ${location.pathname === '/admin/settings' ? 'active' : ''}`}
+                onClick={() => navigate('/admin/settings')}
+              >
+                System Settings
+              </div>
             </>
           )}
+
         </aside>
 
         {/* Main Content Area */}

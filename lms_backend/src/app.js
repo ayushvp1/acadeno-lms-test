@@ -26,6 +26,10 @@ const contentRoutes      = require('./routes/content');      // EPIC-05 content-
 const taskRoutes         = require('./routes/tasks');        // EPIC-05 task lifecycle
 const analyticsRoutes    = require('./routes/analytics');    // EPIC-05 analytics
 const pincodeRoutes      = require('./routes/pincode');
+const adminRoutes        = require('./routes/admin');        // EPIC-08
+const hrRoutes           = require('./routes/hr');           // EPIC-08
+const batchRoutes        = require('./routes/batches');      // EPIC-08
+
 
 const app = express();
 
@@ -74,6 +78,12 @@ app.use('/api/analytics', analyticsRoutes);
 
 // Pincode Lookup Utility
 app.use('/api/pincode', pincodeRoutes);
+
+// EPIC-08: HR & Admin Management
+app.use('/api/admin',   adminRoutes);
+app.use('/api/hr',      hrRoutes);
+app.use('/api/batches', batchRoutes);
+
 
 // ---------------------------------------------------------------------------
 // 3. SYSTEM HEALTH
