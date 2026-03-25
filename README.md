@@ -27,9 +27,7 @@
 
 ## 🎯 Project Overview
 **ACADENO LMS** is a full-stack educational platform designed to seamlessly connect Students, Trainers, HR, and Business Development (BDA) teams in one environment.
-**ACADENO LMS** is a full-stack educational platform designed to seamlessly connect Students, Trainers, HR, and Business Development (BDA) teams in one environment.
 
-Currently, **EPIC-01, EPIC-02, and EPIC-03** have been completed natively without external auth providers to eliminate vendor lock-in and optimize for strict enterprise security. The platform handles:
 Currently, **EPIC-01, EPIC-02, and EPIC-03** have been completed natively without external auth providers to eliminate vendor lock-in and optimize for strict enterprise security. The platform handles:
 * **Secure Authentication**: MFA, Token Rotation, and RLS.
 * **Lead Lifecycle**: BDA-driven lead management, follow-ups, and automated conversion.
@@ -42,7 +40,6 @@ Currently, **EPIC-01, EPIC-02, and EPIC-03** have been completed natively withou
 ### Backend
 * **Environment:** Node.js + Express
 * **Database:** PostgreSQL 18 (Raw SQL with `pg` node-postgres)
-* **Caching/State:** Redis (OTP, Rate Limiting & Registration Invites via `ioredis`)
 * **Caching/State:** Redis (OTP, Rate Limiting & Registration Invites via `ioredis`)
 * **Security:** JWT (RS256 Asymmetric), bcrypt, Helmet
 
@@ -110,11 +107,7 @@ From the `lms_backend` directory:
    * `psql -d acadeno_lms -f src/db/migrations/003_registration_schema.sql`
    * `psql -d acadeno_lms -f src/db/migrations/004_registration_schema.sql`
    * `psql -d acadeno_lms -f src/db/migrations/005_batch_management_rls.sql`
-3. Execute `node seed.js` to inject the initial administrative state (super_admin).
-2. Execute the migrations:
-   * `psql -d acadeno_lms -f src/db/migrations/001_auth_schema.sql`
-   * `psql -d acadeno_lms -f src/db/migrations/002_lead_schema.sql`
-   * `psql -d acadeno_lms -f src/db/migrations/003_registration_schema.sql`
+   * `psql -d acadeno_lms -f src/db/migrations/006_courses_schema.sql`
 3. Execute `node seed.js` to inject the initial administrative state (super_admin).
 
 ### 4. Running the Development Servers
@@ -144,21 +137,8 @@ Navigate to `http://localhost:5173`.
 | `GET` | `/api/auth/me` | Fetch active profile with RBAC context. | Yes |
 | `POST` | `/api/auth/forgot-password` | Emails a secure OTP for recovery. Rate Limited. | No |
 | `POST` | `/api/auth/reset-password` | Consumes OTP and updates password. | No |
-| Method | Endpoint | Description | Auth Required? |
-|--------|----------|-------------|----------------|
-| `POST` | `/api/auth/login` | Credentials discovery & MFA trigger. | No |
-| `POST` | `/api/auth/verify-mfa` | MFA verification to complete login. | No |
-| `POST` | `/api/auth/refresh` | Silently rotates refresh token and issues new access token. | Cookie |
-| `POST` | `/api/auth/logout` | Revokes current session and clears cookies. | Yes |
-| `GET` | `/api/auth/me` | Fetch active profile with RBAC context. | Yes |
-| `POST` | `/api/auth/forgot-password` | Emails a secure OTP for recovery. Rate Limited. | No |
-| `POST` | `/api/auth/reset-password` | Consumes OTP and updates password. | No |
 
 ### Lead Management (Epic 2)
-| Method | Endpoint | Description | Auth Required? |
-|--------|----------|-------------|----------------|
-| `GET` | `/api/leads` | List leads with role-based filtering (RLS). | Yes |
-| `POST` | `/api/leads/:id/convert` | Lock lead and send registration invite. | Yes |
 | Method | Endpoint | Description | Auth Required? |
 |--------|----------|-------------|----------------|
 | `GET` | `/api/leads` | List leads with role-based filtering (RLS). | Yes |
@@ -172,25 +152,12 @@ Navigate to `http://localhost:5173`.
 | `POST` | `/api/registration/draft/:id/submit` | Finalize registration & trigger payment. | No |
 | `PATCH` | `/api/registration/batches/:id` | Update batch capacity/schedule (Admin/Trainer). | Yes |
 | `POST` | `/api/registration/payment-webhook` | Confirm payment & activate student account. | No |
-| `POST` | `/api/registration/draft` | Initialize registration draft from invite. | No |
-| `PUT` | `/api/registration/draft/:id/personal` | Update pre-enrolled personal details. | No |
-| `POST` | `/api/registration/draft/:id/submit` | Finalize registration & trigger payment. | No |
-| `PATCH` | `/api/registration/batches/:id` | Update batch capacity/schedule (Admin/Trainer). | Yes |
-| `POST` | `/api/registration/payment-webhook` | Confirm payment & activate student account. | No |
 
 ---
 
 ## 🛡 Role Permissions (RBAC)
 Role hierarchy strictly governs routes down to the PostgreSQL layer via RLS.
 
-| Role | Access Level / Prefix | Description |
-|------|-----------------------|-------------|
-| **`super_admin`** | (Level 50) `/admin` | Full access. Overrides Row Level Security. |
-| **`hr`** | (Level 40) `/hr` | Staff management and employee metrics. |
-| **`trainer`** | (Level 35) `/trainer` | Manage assigned batch capacities & materials. |
-| **`bda`** | (Level 30) `/bda` | Lead lifecycle management and conversion. |
-| **`student`** | (Level 10) `/student` | Dashboard, invoices, and course progress. |
-| **`lead_registrant`** | (Temp) `/register` | Scoped access to the registration wizard. |
 | Role | Access Level / Prefix | Description |
 |------|-----------------------|-------------|
 | **`super_admin`** | (Level 50) `/admin` | Full access. Overrides Row Level Security. |
@@ -221,7 +188,6 @@ Extended schema supporting the full enrollment pipeline.
 
 ### Core Tables
 * **`users`**: RBAC, credentials, MFA status, lockouts.
-* **`users`**: RBAC, credentials, MFA status, lockouts.
 * **`leads`**: CRM data, status tracking, conversion locks.
 * **`students`**: Personal & profile data linked to `users`.
 * **`enrollments`**: Course participation, fee status, activity audits.
@@ -229,13 +195,10 @@ Extended schema supporting the full enrollment pipeline.
 * **`registration_drafts`**: Volatile state storage for the enrollment wizard.
 * **`refresh_tokens`**: Token rotation and session management.
 * **`trusted_devices`**: Device fingerprinting for MFA trust.
-* **`refresh_tokens`**: Token rotation and session management.
-* **`trusted_devices`**: Device fingerprinting for MFA trust.
 
 ---
 
 ## 🧪 Testing
-The backend utilizes **Jest** for assertions and **Supertest** to emulate HTTP workflows seamlessly.
 The backend utilizes **Jest** for assertions and **Supertest** to emulate HTTP workflows seamlessly.
 ```bash
 cd lms_backend
@@ -252,10 +215,6 @@ npm test
 * **Why Registration Drafts?** Decoupling draft state from core users ensures that only completed, verified, and PAID registrations enter the primary ecosystem.
 * **Why Redis for OTP?** High throughput, automatic TTL garbage collection, and preventing noisy writes in PostgreSQL.
 * **Why `httpOnly` Cookies?** Storing refresh tokens in `httpOnly` cookies prevents JavaScript access (XSS) and facilitates automatic token rotation.
-* **Why RLS?** Row-Level Security ensures data-level isolation (e.g., Trainers only see/edit their assigned batches).
-* **Why Registration Drafts?** Decoupling draft state from core users ensures that only completed, verified, and PAID registrations enter the primary ecosystem.
-* **Why Redis for OTP?** High throughput, automatic TTL garbage collection, and preventing noisy writes in PostgreSQL.
-* **Why `httpOnly` Cookies?** Storing refresh tokens in `httpOnly` cookies prevents JavaScript access (XSS) and facilitates automatic token rotation.
 
 ---
 
@@ -264,11 +223,7 @@ npm test
 * **Internal Server Error (500) at Login `permission denied for table users`:**
   * **Cause:** DB user lacks permissions to accessible newly migrated tables.
   * **Fix:** Execute `GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO "YOUR_DB_USER"` inside `psql`.
-  * **Cause:** DB user lacks permissions to accessible newly migrated tables.
-  * **Fix:** Execute `GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO "YOUR_DB_USER"` inside `psql`.
 * **Axios Interceptor Infinite Reload Loop:**
-  * **Cause:** Initial loads fetching from `/api/auth/me` causing dual 401 rejections.
-  * **Fix:** Bypassed using a standard decoupled `axios.post` for initial auth check (Fixed in Context layer in production).
   * **Cause:** Initial loads fetching from `/api/auth/me` causing dual 401 rejections.
   * **Fix:** Bypassed using a standard decoupled `axios.post` for initial auth check (Fixed in Context layer in production).
 
@@ -276,9 +231,6 @@ npm test
 
 ## 🤝 Contributing Guide
 1. Create a descriptive feature branch: `git checkout -b feature/US-AUTH-07-google-sso`
-2. Follow strict ESLint conventions.
-3. Write associated Jest tests mapping your assertions.
-4. Place new schemas in `src/db/migrations/` sequentially.
 2. Follow strict ESLint conventions.
 3. Write associated Jest tests mapping your assertions.
 4. Place new schemas in `src/db/migrations/` sequentially.
@@ -290,11 +242,6 @@ npm test
 * [x] **EPIC-02: Lead Management & CRM**
 * [x] **EPIC-03: Student Registration & Enrollment**
 * [x] **BATCH MANAGEMENT: Administrative Controls**
-* [ ] **EPIC-04: Course Content & Evaluation**
+* [x] **EPIC-04: Course Content & Evaluation** (Video Transcoding & Publishing integrated)
 * [ ] **EPIC-05: AI Tutoring & Assistant Integration**
-* [x] **EPIC-01: Authentication & Security**
-* [x] **EPIC-02: Lead Management & CRM**
-* [x] **EPIC-03: Student Registration & Enrollment**
-* [x] **BATCH MANAGEMENT: Administrative Controls**
-* [ ] **EPIC-04: Course Content & Evaluation**
-* [ ] **EPIC-05: AI Tutoring & Assistant Integration**
+* [ ] **EPIC-06: Interactive World Map & Gamification**

@@ -77,7 +77,10 @@ export const RegistrationProvider = ({ children }) => {
 
       // Helper to parse FormData into object
       const parsePayload = (payload, isForm) => isForm ? Object.fromEntries(payload.entries()) : payload;
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/main
       // Step 1: Create or Update Draft
       if (stepNum === 1) {
         if (!draftId) {
@@ -88,6 +91,7 @@ export const RegistrationProvider = ({ children }) => {
         } else {
           await registrationApi.updatePersonal(draftId, dataPayload, isFormData);
         }
+<<<<<<< HEAD
         setFormData(prev => ({ ...prev, personal_details: { ...prev.personal_details, ...parsePayload(dataPayload, isFormData) } }));
       // Step 2: Address
       } else if (stepNum === 2) {
@@ -100,6 +104,8 @@ export const RegistrationProvider = ({ children }) => {
       // Step 4: Course
       } else if (stepNum === 4) {
         result = await registrationApi.updateCourse(draftId, dataPayload);
+=======
+>>>>>>> origin/main
         setFormData(prev => ({
           ...prev,
           course_batch: {

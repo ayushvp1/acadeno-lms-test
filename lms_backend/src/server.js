@@ -1,5 +1,5 @@
 require('dotenv').config();
-const app = require('./app');
+const app   = require('./app');
 const { pool } = require('./db/index');
 const redis = require('./utils/redis');
 
@@ -7,6 +7,7 @@ const redis = require('./utils/redis');
 // ACADENO LMS — Server Entry Point
 // ==========================================================================
 // Connects to Postgres and Redis before starting the Express server.
+// Registers background cron jobs after successful startup.
 // ==========================================================================
 
 const PORT = process.env.PORT || 3001;
@@ -22,13 +23,22 @@ async function startServer() {
     await redis.ping();
     console.log('✅ Redis connected successfully');
 
+<<<<<<< HEAD
     // 4. Register Lead Management Jobs (US-BDA-07)
+=======
+    // 3. Register background jobs
+>>>>>>> origin/main
     require('./jobs/leadArchiveJob').startLeadJobs();
+    require('./jobs/liveSessionReminderJob').startLiveSessionReminderJob();
 
+<<<<<<< HEAD
     // 3. Start server
+=======
+    // 4. Start HTTP server
+>>>>>>> origin/main
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
-      console.log(`🌐 Auth routes fully mounted at http://localhost:${PORT}/api/auth`);
+      console.log(`🌐 API available at http://localhost:${PORT}/api`);
     });
   } catch (error) {
     console.error('❌ Failed to start server:', error);

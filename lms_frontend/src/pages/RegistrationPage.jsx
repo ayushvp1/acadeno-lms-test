@@ -8,7 +8,7 @@ import { AcademicQualificationsStep } from './steps/AcademicQualificationsStep';
 import { CourseBatchStep } from './steps/CourseBatchStep';
 import { ReviewSubmitStep } from './steps/ReviewSubmitStep';
 
-export const RegistrationPage = ({ editMode = false }) => {
+const RegistrationPage = ({ editMode = false }) => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { currentStep, loadDraft, resetForm, draftId, isLoading } = useRegistration();
@@ -62,3 +62,5 @@ export const RegistrationPage = ({ editMode = false }) => {
     </div>
   );
 };
+
+export default RegistrationPage;

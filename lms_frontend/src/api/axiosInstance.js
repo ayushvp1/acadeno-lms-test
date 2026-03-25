@@ -78,8 +78,11 @@ axiosInstance.interceptors.response.use(
       } catch (refreshError) {
         processQueue(refreshError, null);
         setAccessToken(null);
-        // As requested: Only redirect to /login if BOTH the original request AND the refresh fail.
-        window.location.href = '/login';
+        // Prevent redirect loop if already on login page or related public routes
+        const publicPages = ['/login', '/mfa', '/forgot-password', '/reset-password', '/register'];
+        if (!publicPages.some(page => window.location.pathname.startsWith(page))) {
+          window.location.href = '/login';
+        }
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;

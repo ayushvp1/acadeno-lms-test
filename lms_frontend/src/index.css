@@ -479,24 +479,47 @@ html, body {
   .auth-card { padding: 30px 20px; }
   .otp-box { width: 40px; height: 48px; font-size: 20px; }
 }
+
 /* ---------------------------------
    WIZARD UI (Registration)
 ------------------------------------ */
+<<<<<<< HEAD
+=======
+.wizard-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+>>>>>>> origin/main
 .wizard-progress {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 40px;
   position: relative;
+<<<<<<< HEAD
   padding: 0 10px;
+=======
+  padding: 20px;
+  background: var(--white);
+  border-radius: var(--border-radius);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+>>>>>>> origin/main
 }
 
 .wizard-progress::before {
   content: '';
   position: absolute;
+<<<<<<< HEAD
   top: 18px;
   left: 0;
   right: 0;
+=======
+  top: 38px;
+  left: 40px;
+  right: 40px;
+>>>>>>> origin/main
   height: 2px;
   background-color: var(--gray-border);
   z-index: 1;
@@ -512,7 +535,21 @@ html, body {
   position: relative;
 }
 
-.progress-step .step-circle {
+.progress-step.completed .step-circle {
+  background-color: var(--success);
+  border-color: var(--success);
+  color: var(--white);
+}
+
+.progress-step.active .step-circle {
+  border-color: var(--primary-blue);
+  color: var(--white);
+  background-color: var(--primary-blue);
+  transform: scale(1.1);
+  box-shadow: 0 0 15px rgba(37, 99, 235, 0.2);
+}
+
+.step-circle {
   width: 36px;
   height: 36px;
   background-color: var(--white);
@@ -525,6 +562,7 @@ html, body {
   font-weight: 700;
   font-size: 14px;
   transition: all 0.3s ease;
+<<<<<<< HEAD
   box-shadow: 0 0 0 4px var(--bg-light, #f8fafc);
 }
 
@@ -543,11 +581,19 @@ html, body {
 }
 
 .progress-step .step-label {
+=======
+}
+
+.step-label {
+>>>>>>> origin/main
   font-size: 12px;
   font-weight: 600;
   color: var(--gray-text);
   text-align: center;
+<<<<<<< HEAD
   max-width: 100px;
+=======
+>>>>>>> origin/main
 }
 
 .progress-step.active .step-label {
@@ -608,13 +654,14 @@ html, body {
   .form-grid {
     grid-template-columns: 1fr;
   }
-  .progress-step .step-label {
+  .step-label {
     display: none;
   }
   .step-card {
     padding: 24px;
   }
 }
+
 /* ---------------------------------
    REVIEW STEP STYLES
 ------------------------------------ */
@@ -677,3 +724,67 @@ html, body {
     grid-template-columns: 1fr;
   }
 }
+<<<<<<< HEAD
+=======
+
+/* ---------------------------------
+   EPIC-03: LIST DATA TABLE
+------------------------------------ */
+.data-table-container {
+  background: var(--white);
+  border-radius: var(--border-radius);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  overflow: hidden;
+}
+
+.data-table-header {
+  padding: 20px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--gray-border);
+}
+
+.search-input {
+  width: 300px;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-table th, .data-table td {
+  padding: 16px 24px;
+  text-align: left;
+  border-bottom: 1px solid var(--gray-border);
+}
+
+.data-table th {
+  background-color: var(--gray-light);
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--gray-text);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.data-table td {
+  font-size: 14px;
+  color: var(--text-dark);
+}
+
+.status-badge {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.status-draft { background: #f1f5f9; color: #475569; }
+.status-pending_payment { background: #fffbeb; color: #d97706; }
+.status-active { background: #ecfdf5; color: #059669; }
+>>>>>>> origin/main

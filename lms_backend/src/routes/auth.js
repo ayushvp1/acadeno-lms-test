@@ -7,7 +7,20 @@
 const express = require('express');
 const router  = express.Router();
 
+<<<<<<< HEAD
 const { login, refresh, logout, forgotPassword, resetPassword, verifyMfa, getMe, validateRegistrationToken } = require('../controllers/authController');
+=======
+const {
+  login,
+  refresh,
+  logout,
+  forgotPassword,
+  resetPassword,
+  verifyMfa,
+  getMe,
+  validateRegistrationToken,
+} = require('../controllers/authController');
+>>>>>>> origin/main
 const authenticate = require('../middleware/authenticate');
 
 // POST /auth/login            — Authenticate a user          (US-AUTH-01 / US-AUTH-02)

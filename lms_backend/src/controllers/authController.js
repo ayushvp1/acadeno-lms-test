@@ -38,7 +38,7 @@ const REFRESH_COOKIE_OPTIONS = {
   httpOnly: true,
   secure:   process.env.NODE_ENV === 'production',
   sameSite: 'strict',
-  path:     '/auth',
+  path:     '/',
   maxAge:   (process.env.JWT_REFRESH_EXPIRY || 604800) * 1000,  // ms
 };
 
@@ -317,7 +317,7 @@ async function refresh(req, res) {
 
     // Token hash not found at all
     if (tokenResult.rows.length === 0) {
-      res.clearCookie('refreshToken', { path: '/auth' });
+      res.clearCookie('refreshToken', { path: '/' });
       return res.status(401).json({
         error: 'Session expired',
         code:  'REFRESH_INVALID',
@@ -338,7 +338,7 @@ async function refresh(req, res) {
         [storedToken.user_id]
       );
 
-      res.clearCookie('refreshToken', { path: '/auth' });
+      res.clearCookie('refreshToken', { path: '/' });
       return res.status(401).json({
         error: 'Session expired',
         code:  'REFRESH_REUSE_DETECTED',
@@ -355,7 +355,7 @@ async function refresh(req, res) {
         [storedToken.id]
       );
 
-      res.clearCookie('refreshToken', { path: '/auth' });
+      res.clearCookie('refreshToken', { path: '/' });
       return res.status(401).json({
         error: 'Session expired',
         code:  'REFRESH_INVALID',
@@ -381,7 +381,7 @@ async function refresh(req, res) {
     );
 
     if (userResult.rows.length === 0) {
-      res.clearCookie('refreshToken', { path: '/auth' });
+      res.clearCookie('refreshToken', { path: '/' });
       return res.status(401).json({
         error: 'Session expired',
         code:  'REFRESH_INVALID',
@@ -459,7 +459,7 @@ async function logout(req, res) {
     }
 
     // Always clear the cookie, even if no token was found
-    res.clearCookie('refreshToken', { path: '/auth' });
+    res.clearCookie('refreshToken', { path: '/' });
 
     return res.status(200).json({ message: 'Logged out successfully' });
   } catch (err) {

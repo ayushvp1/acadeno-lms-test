@@ -177,6 +177,133 @@ async function sendEnrollmentSuccessEmail(toEmail, studentName, courseName, logi
   });
 }
 
+// ===========================================================================
+// EPIC-05: Course & Content Management Emails
+// ===========================================================================
+
+// ---------------------------------------------------------------------------
+// sendTranscodeFailureEmail
+// ---------------------------------------------------------------------------
+// Business intent: Notify a trainer when video transcoding fails so they can
+// re-upload the source MP4.
+//
+// Parameters:
+//   toEmail      - Trainer's email address
+//   trainerName  - Trainer's display name
+//   contentTitle - Title of the affected content item
+//   courseTitle  - Title of the parent course
+// ---------------------------------------------------------------------------
+async function sendTranscodeFailureEmail(toEmail, trainerName, contentTitle, courseTitle) {
+  await transporter.sendMail({
+    from:    process.env.EMAIL_FROM,
+    to:      toEmail,
+    subject: `Video Transcoding Failed — ${contentTitle} — Acadeno LMS`,
+    text: `Hi ${trainerName},\n\nUnfortunately, the video transcoding job for your content "${contentTitle}" in course "${courseTitle}" has failed.\n\nPlease log in to the LMS and re-upload the video file.\n\nIf the problem persists, please contact platform support.\n\nWarm regards,\nThe Acadeno Team`,
+    html: `
+      <div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;padding:24px;border:2px solid #ef4444;border-radius:12px">
+        <h2 style="color:#ef4444;margin-bottom:8px">Video Transcoding Failed</h2>
+        <p style="color:#475569">Hi <strong>${trainerName}</strong>,</p>
+        <p style="color:#475569">The video transcoding job for <strong>${contentTitle}</strong> in course <strong>${courseTitle}</strong> has failed.</p>
+        <p style="color:#475569">Please log in to the LMS and re-upload the video file to resolve this issue.</p>
+        <p style="color:#94a3b8;font-size:13px">If this keeps happening, contact platform support.</p>
+        <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0">
+        <p style="color:#94a3b8;font-size:12px">Acadeno Learning Management System</p>
+      </div>`,
+  });
+}
+
+// ---------------------------------------------------------------------------
+// sendTaskEvaluationEmail
+// ---------------------------------------------------------------------------
+// Business intent: Notify a student when their task submission has been
+// evaluated by the trainer (pass/fail + optional feedback).
+//
+// Parameters:
+//   toEmail      - Student's email address
+//   studentName  - Student's display name
+//   taskTitle    - Title of the evaluated task
+//   grade        - 'pass' or 'fail'
+//   score        - Numeric score (may be null if not set)
+//   feedback     - Trainer's feedback text (may be null)
+//   dashboardUrl - Link to the student's task page
+// ---------------------------------------------------------------------------
+async function sendTaskEvaluationEmail(toEmail, studentName, taskTitle, grade, score, feedback, dashboardUrl) {
+  const strGradeLabel  = grade === 'pass' ? '✅ Pass' : '❌ Fail';
+  const strGradeColor  = grade === 'pass' ? '#16a34a' : '#ef4444';
+  const strScoreText   = score !== null && score !== undefined ? ` — Score: ${score}/100` : '';
+
+  await transporter.sendMail({
+    from:    process.env.EMAIL_FROM,
+    to:      toEmail,
+    subject: `Task Evaluated: ${taskTitle} — ${strGradeLabel} — Acadeno LMS`,
+    text: `Hi ${studentName},\n\nYour submission for "${taskTitle}" has been evaluated.\n\nResult: ${grade.toUpperCase()}${strScoreText}\n${feedback ? `\nFeedback: ${feedback}\n` : ''}\nLog in to view the full details:\n${dashboardUrl}\n\nKeep learning!\nThe Acadeno Team`,
+    html: `
+      <div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;padding:24px;border:2px solid ${strGradeColor};border-radius:12px">
+        <h2 style="color:${strGradeColor};margin-bottom:8px">Task Evaluated: ${strGradeLabel}</h2>
+        <p style="color:#475569">Hi <strong>${studentName}</strong>,</p>
+        <p style="color:#475569">Your submission for <strong>${taskTitle}</strong> has been reviewed.</p>
+        ${score !== null && score !== undefined
+          ? `<p style="color:#1e293b;font-size:20px;font-weight:700">Score: ${score}/100</p>`
+          : ''}
+        ${feedback
+          ? `<div style="background:#f8fafc;border-left:4px solid ${strGradeColor};padding:12px 16px;margin:16px 0;border-radius:4px">
+               <p style="color:#64748b;margin:0;font-size:13px;text-transform:uppercase;letter-spacing:0.5px">Trainer Feedback</p>
+               <p style="color:#1e293b;margin:8px 0 0">${feedback}</p>
+             </div>`
+          : ''}
+        <a href="${dashboardUrl}" style="display:inline-block;margin:16px 0;padding:12px 28px;background:#2563eb;color:#fff;text-decoration:none;border-radius:6px;font-weight:600">
+          View Details
+        </a>
+        <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0">
+        <p style="color:#94a3b8;font-size:12px">Acadeno Learning Management System</p>
+      </div>`,
+  });
+}
+
+// ---------------------------------------------------------------------------
+// sendLiveSessionReminderEmail
+// ---------------------------------------------------------------------------
+// Business intent: Remind students of an upcoming live session 1 hour before
+// it starts (triggered by liveSessionReminderJob.js cron).
+//
+// Parameters:
+//   toEmail       - Student's email address
+//   studentName   - Student's display name
+//   sessionTitle  - Title of the live session
+//   courseName    - Name of the parent course
+//   startTime     - ISO string or human-readable start time
+//   joinUrl       - Zoom/Meet/Teams URL for the session
+// ---------------------------------------------------------------------------
+async function sendLiveSessionReminderEmail(toEmail, studentName, sessionTitle, courseName, startTime, joinUrl) {
+  await transporter.sendMail({
+    from:    process.env.EMAIL_FROM,
+    to:      toEmail,
+    subject: `Live Session Starting Soon: ${sessionTitle} — Acadeno LMS`,
+    text: `Hi ${studentName},\n\nThis is a reminder that your live session "${sessionTitle}" for "${courseName}" starts in 1 hour.\n\nScheduled Time: ${startTime}\n\nJoin the session here:\n${joinUrl}\n\nSee you there!\nThe Acadeno Team`,
+    html: `
+      <div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;padding:24px;border:2px solid #7c3aed;border-radius:12px">
+        <h2 style="color:#7c3aed;margin-bottom:8px">Live Session Starting Soon!</h2>
+        <p style="color:#475569">Hi <strong>${studentName}</strong>,</p>
+        <p style="color:#475569">Your live session <strong>${sessionTitle}</strong> for <strong>${courseName}</strong> starts in <strong>1 hour</strong>.</p>
+        <table style="width:100%;border-collapse:collapse;margin:16px 0">
+          <tr>
+            <td style="padding:10px;background:#f5f3ff;color:#64748b;width:120px">Session</td>
+            <td style="padding:10px;background:#f5f3ff;font-weight:600;color:#1e293b">${sessionTitle}</td>
+          </tr>
+          <tr>
+            <td style="padding:10px;color:#64748b">Scheduled</td>
+            <td style="padding:10px;font-weight:600;color:#1e293b">${startTime}</td>
+          </tr>
+        </table>
+        <a href="${joinUrl}" style="display:inline-block;margin:16px 0;padding:12px 28px;background:#7c3aed;color:#fff;text-decoration:none;border-radius:6px;font-weight:600">
+          Join Live Session
+        </a>
+        <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0">
+        <p style="color:#94a3b8;font-size:12px">Acadeno Learning Management System</p>
+      </div>`,
+  });
+}
+
 module.exports = {
   sendOTPEmail,
   sendLockoutEmail,
@@ -186,4 +313,8 @@ module.exports = {
   sendPaymentLinkEmail,
   sendRegistrationInviteEmail,
   sendEnrollmentSuccessEmail,
+  // EPIC-05
+  sendTranscodeFailureEmail,
+  sendTaskEvaluationEmail,
+  sendLiveSessionReminderEmail,
 };
