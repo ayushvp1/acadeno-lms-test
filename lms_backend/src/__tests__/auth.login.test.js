@@ -127,10 +127,7 @@ describe('US-AUTH-01: POST /auth/login', () => {
 
   // ---- User not found ----
   test('returns 401 "Invalid credentials" when user not found', async () => {
-<<<<<<< HEAD
     mockClient.query.mockResolvedValueOnce({});           // SET role
-=======
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
     mockClient.query.mockResolvedValueOnce({ rows: [] }); // SELECT returns nothing
 
     const res = await request(app)
@@ -143,10 +140,7 @@ describe('US-AUTH-01: POST /auth/login', () => {
 
   // ---- Inactive account ----
   test('returns 401 for inactive user (does not reveal account exists)', async () => {
-<<<<<<< HEAD
     mockClient.query.mockResolvedValueOnce({}); // SET role
-=======
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
     mockClient.query.mockResolvedValueOnce({
       rows: [mockUser({ is_active: false })],
     });
@@ -162,10 +156,7 @@ describe('US-AUTH-01: POST /auth/login', () => {
   // ---- Wrong password ----
   test('returns 401 and increments failed_login_count on wrong password', async () => {
     const user = mockUser({ failed_login_count: 1 });
-<<<<<<< HEAD
     mockClient.query.mockResolvedValueOnce({});                // SET role
-=======
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
     mockClient.query.mockResolvedValueOnce({ rows: [user] }); // SELECT
     bcrypt.compare.mockResolvedValueOnce(false);               // wrong password
     mockClient.query.mockResolvedValueOnce({ rows: [] });      // UPDATE
@@ -178,30 +169,19 @@ describe('US-AUTH-01: POST /auth/login', () => {
     expect(res.body.error).toBe('Invalid credentials');
 
     // Verify failed_login_count was incremented in the UPDATE call
-<<<<<<< HEAD
     const updateCall = mockClient.query.mock.calls[2];
-=======
-    const updateCall = mockClient.query.mock.calls[1];
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
     expect(updateCall[1]).toContain(2); // 1 + 1 = 2
   });
 
   // ---- Successful login ----
   test('returns 200 with accessToken, user, and sets refreshToken cookie', async () => {
     const user = mockUser();
-<<<<<<< HEAD
     mockClient.query.mockResolvedValueOnce({});                  // SET role
     mockClient.query.mockResolvedValueOnce({ rows: [user] });   // SELECT
     bcrypt.compare.mockResolvedValueOnce(true);                  // correct password
     mockClient.query.mockResolvedValueOnce({});        // UPDATE reset
     mockClient.query.mockResolvedValueOnce({});        // INSERT refresh token
     mockClient.query.mockResolvedValueOnce({});        // UPDATE trusted_devices
-=======
-    mockClient.query.mockResolvedValueOnce({ rows: [user] });   // SELECT
-    bcrypt.compare.mockResolvedValueOnce(true);                  // correct password
-    mockClient.query.mockResolvedValueOnce({ rows: [] });        // UPDATE reset
-    mockClient.query.mockResolvedValueOnce({ rows: [] });        // INSERT refresh token
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
 
     const res = await request(app)
       .post('/auth/login')
@@ -227,62 +207,39 @@ describe('US-AUTH-01: POST /auth/login', () => {
 
   test('resets failed_login_count and locked_until on successful login', async () => {
     const user = mockUser({ failed_login_count: 3, locked_until: null });
-<<<<<<< HEAD
     mockClient.query.mockResolvedValueOnce({});                  // SET role
     mockClient.query.mockResolvedValueOnce({ rows: [user] });   // SELECT
     bcrypt.compare.mockResolvedValueOnce(true);
     mockClient.query.mockResolvedValueOnce({});        // UPDATE reset
     mockClient.query.mockResolvedValueOnce({});        // INSERT token
     mockClient.query.mockResolvedValueOnce({});        // UPDATE trusted_devices
-=======
-    mockClient.query.mockResolvedValueOnce({ rows: [user] });   // SELECT
-    bcrypt.compare.mockResolvedValueOnce(true);
-    mockClient.query.mockResolvedValueOnce({ rows: [] });        // UPDATE reset
-    mockClient.query.mockResolvedValueOnce({ rows: [] });        // INSERT token
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
 
     await request(app)
       .post('/auth/login')
       .send({ email: 'test@acadeno.com', password: 'CorrectPassword!' });
 
     // Verify the UPDATE call resets the fields
-<<<<<<< HEAD
     const resetCall = mockClient.query.mock.calls[2];
-=======
-    const resetCall = mockClient.query.mock.calls[1];
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
     expect(resetCall[0]).toMatch(/failed_login_count\s*=\s*0/);
     expect(resetCall[0]).toMatch(/locked_until\s*=\s*NULL/);
   });
 
   test('stores SHA-256 hash of refresh token in db, not the raw token', async () => {
     const user = mockUser();
-<<<<<<< HEAD
     mockClient.query.mockResolvedValueOnce({}); // SET role
     mockClient.query.mockResolvedValueOnce({ rows: [user] });
     bcrypt.compare.mockResolvedValueOnce(true);
     mockClient.query.mockResolvedValueOnce({});
     mockClient.query.mockResolvedValueOnce({});
     mockClient.query.mockResolvedValueOnce({});
-=======
-    mockClient.query.mockResolvedValueOnce({ rows: [user] });
-    bcrypt.compare.mockResolvedValueOnce(true);
-    mockClient.query.mockResolvedValueOnce({ rows: [] });
-    mockClient.query.mockResolvedValueOnce({ rows: [] });
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
 
     await request(app)
       .post('/auth/login')
       .set('User-Agent', 'TestBrowser/1.0')
       .send({ email: 'test@acadeno.com', password: 'CorrectPassword!' });
 
-<<<<<<< HEAD
     // The INSERT call (4rd query including SET) should contain token_hash, not raw token
     const insertCall = mockClient.query.mock.calls[3];
-=======
-    // The INSERT call (3rd query) should contain token_hash, not raw token
-    const insertCall = mockClient.query.mock.calls[2];
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
     expect(insertCall[0]).toMatch(/INSERT INTO refresh_tokens/);
 
     // The stored hash should NOT be the raw mock refresh token
@@ -293,11 +250,8 @@ describe('US-AUTH-01: POST /auth/login', () => {
 
   // ---- 500 on unexpected error ----
   test('returns 500 on unexpected database error without leaking details', async () => {
-<<<<<<< HEAD
     mockClient.query.mockResolvedValueOnce({}); // SET role
     mockClient.query.mockResolvedValueOnce({}); // SET role
-=======
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
     mockClient.query.mockRejectedValueOnce(new Error('Connection lost'));
 
     const res = await request(app)
@@ -320,10 +274,7 @@ describe('US-AUTH-02: Account Lockout', () => {
     const futureDate = new Date(Date.now() + 30 * 60 * 1000).toISOString();
     const user = mockUser({ locked_until: futureDate });
 
-<<<<<<< HEAD
     mockClient.query.mockResolvedValueOnce({}); // SET role
-=======
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
     mockClient.query.mockResolvedValueOnce({ rows: [user] });
 
     const res = await request(app)
@@ -341,10 +292,7 @@ describe('US-AUTH-02: Account Lockout', () => {
     const user = mockUser({ failed_login_count: 4 }); // next fail = 5th
     const lockedUntilDate = new Date(Date.now() + 30 * 60 * 1000).toISOString();
 
-<<<<<<< HEAD
     mockClient.query.mockResolvedValueOnce({});                // SET role
-=======
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
     mockClient.query.mockResolvedValueOnce({ rows: [user] });   // SELECT
     bcrypt.compare.mockResolvedValueOnce(false);                  // wrong password
     mockClient.query.mockResolvedValueOnce({                      // UPDATE with lock
@@ -374,19 +322,12 @@ describe('US-AUTH-02: Account Lockout', () => {
       locked_until:       pastDate,
     });
 
-<<<<<<< HEAD
     mockClient.query.mockResolvedValueOnce({});                  // SET role
     mockClient.query.mockResolvedValueOnce({ rows: [user] });   // SELECT
     bcrypt.compare.mockResolvedValueOnce(true);                   // correct password
     mockClient.query.mockResolvedValueOnce({});         // UPDATE reset
     mockClient.query.mockResolvedValueOnce({});         // INSERT token
     mockClient.query.mockResolvedValueOnce({});         // UPDATE trusted_devices
-=======
-    mockClient.query.mockResolvedValueOnce({ rows: [user] });   // SELECT
-    bcrypt.compare.mockResolvedValueOnce(true);                   // correct password
-    mockClient.query.mockResolvedValueOnce({ rows: [] });         // UPDATE reset
-    mockClient.query.mockResolvedValueOnce({ rows: [] });         // INSERT token
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
 
     const res = await request(app)
       .post('/auth/login')
@@ -396,21 +337,14 @@ describe('US-AUTH-02: Account Lockout', () => {
     expect(res.body.accessToken).toBeDefined();
 
     // Verify counters were reset
-<<<<<<< HEAD
     const resetCall = mockClient.query.mock.calls[2];
-=======
-    const resetCall = mockClient.query.mock.calls[1];
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
     expect(resetCall[0]).toMatch(/failed_login_count\s*=\s*0/);
     expect(resetCall[0]).toMatch(/locked_until\s*=\s*NULL/);
   });
 
   test('does not lock account on 4th failed attempt (only the 5th)', async () => {
     const user = mockUser({ failed_login_count: 3 }); // next fail = 4th
-<<<<<<< HEAD
     mockClient.query.mockResolvedValueOnce({}); // SET role
-=======
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
     mockClient.query.mockResolvedValueOnce({ rows: [user] });
     bcrypt.compare.mockResolvedValueOnce(false);
     mockClient.query.mockResolvedValueOnce({ rows: [] }); // UPDATE increment

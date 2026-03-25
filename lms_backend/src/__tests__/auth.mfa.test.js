@@ -105,10 +105,7 @@ describe('POST /auth/login — MFA on new device', () => {
   test('skips MFA when mfa_enabled = false (normal login)', async () => {
     const user = mockUser({ mfa_enabled: false });
     mockClient.query
-<<<<<<< HEAD
       .mockResolvedValueOnce({})                   // SET role
-=======
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
       .mockResolvedValueOnce({ rows: [user] })    // SELECT user
       .mockResolvedValueOnce({ rows: [] })         // UPDATE reset counters (issueTokens helper)
       .mockResolvedValueOnce({ rows: [] })         // INSERT refresh_tokens
@@ -129,10 +126,7 @@ describe('POST /auth/login — MFA on new device', () => {
   test('skips MFA when device IS trusted even if mfa_enabled = true', async () => {
     const user = mockUser({ mfa_enabled: true });
     mockClient.query
-<<<<<<< HEAD
       .mockResolvedValueOnce({})                         // SET role
-=======
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
       .mockResolvedValueOnce({ rows: [user] })           // SELECT user
       .mockResolvedValueOnce({ rows: [{ id: 'dev1' }] }) // SELECT trusted_devices → found
       .mockResolvedValueOnce({ rows: [] })                // UPDATE reset counters
@@ -144,10 +138,7 @@ describe('POST /auth/login — MFA on new device', () => {
     const res = await request(app)
       .post('/auth/login')
       .set('User-Agent', 'TrustedBrowser/1.0')
-<<<<<<< HEAD
       .set('x-device-fingerprint', 'trusted-device-uuid')
-=======
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
       .send({ email: 'test@acadeno.com', password: 'Password1!' });
 
     expect(res.status).toBe(200);
@@ -160,15 +151,9 @@ describe('POST /auth/login — MFA on new device', () => {
   test('triggers MFA when mfa_enabled = true AND device is NOT trusted', async () => {
     const user = mockUser({ mfa_enabled: true });
     mockClient.query
-<<<<<<< HEAD
       .mockResolvedValueOnce({})                 // SET role
       .mockResolvedValueOnce({ rows: [user] })   // SELECT user
       .mockResolvedValueOnce({ rows: [] });      // SELECT trusted_devices → not found
-=======
-      .mockResolvedValueOnce({ rows: [user] })   // SELECT user
-      .mockResolvedValueOnce({ rows: [] })        // SELECT trusted_devices → not found
-      .mockResolvedValueOnce({ rows: [] });       // UPDATE reset counters
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
 
     bcrypt.compare.mockResolvedValueOnce(true);
     mockRedis.set.mockResolvedValueOnce('OK');     // store MFA OTP
@@ -190,10 +175,7 @@ describe('POST /auth/login — MFA on new device', () => {
   test('stores MFA OTP in Redis with correct key and TTL', async () => {
     const user = mockUser({ mfa_enabled: true });
     mockClient.query
-<<<<<<< HEAD
       .mockResolvedValueOnce({})             // SET role
-=======
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
       .mockResolvedValueOnce({ rows: [user] })
       .mockResolvedValueOnce({ rows: [] })   // untrusted device
       .mockResolvedValueOnce({ rows: [] });  // reset counters
@@ -206,11 +188,7 @@ describe('POST /auth/login — MFA on new device', () => {
       .send({ email: 'test@acadeno.com', password: 'Password1!' });
 
     expect(mockRedis.set).toHaveBeenCalledWith(
-<<<<<<< HEAD
       `otp:mfa:${user.id}`,
-=======
-      `otp:mfa:${TEST_USER_ID}`,
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
       expect.stringMatching(/^\d{6}$/),
       'EX',
       600
@@ -220,10 +198,7 @@ describe('POST /auth/login — MFA on new device', () => {
   test('sends MFA OTP via email with purpose = mfa', async () => {
     const user = mockUser({ mfa_enabled: true });
     mockClient.query
-<<<<<<< HEAD
       .mockResolvedValueOnce({})             // SET role
-=======
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
       .mockResolvedValueOnce({ rows: [user] })
       .mockResolvedValueOnce({ rows: [] })
       .mockResolvedValueOnce({ rows: [] });
@@ -236,11 +211,7 @@ describe('POST /auth/login — MFA on new device', () => {
       .send({ email: 'test@acadeno.com', password: 'Password1!' });
 
     expect(sendOTPEmail).toHaveBeenCalledWith(
-<<<<<<< HEAD
       user.email,
-=======
-      'test@acadeno.com',
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
       expect.stringMatching(/^\d{6}$/),
       'mfa'
     );
@@ -259,10 +230,7 @@ describe('POST /auth/verify-mfa', () => {
     ];
 
     for (const body of cases) {
-<<<<<<< HEAD
       mockClient.query.mockResolvedValueOnce({});               // SET role
-=======
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
       const res = await request(app)
         .post('/auth/verify-mfa')
         .send(body);
@@ -273,13 +241,9 @@ describe('POST /auth/verify-mfa', () => {
   });
 
   test('returns 400 OTP_INVALID when user does not exist', async () => {
-<<<<<<< HEAD
     mockClient.query
       .mockResolvedValueOnce({})                            // SET role
       .mockResolvedValueOnce({ rows: [] });
-=======
-    mockClient.query.mockResolvedValueOnce({ rows: [] });
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
 
     const res = await request(app)
       .post('/auth/verify-mfa')
@@ -290,17 +254,11 @@ describe('POST /auth/verify-mfa', () => {
   });
 
   test('returns 400 OTP_EXPIRED when Redis key is missing', async () => {
-<<<<<<< HEAD
     mockClient.query
       .mockResolvedValueOnce({})                            // SET role
       .mockResolvedValueOnce({
         rows: [{ id: TEST_USER_ID, email: 'test@acadeno.com', role: 'student' }],
       });
-=======
-    mockClient.query.mockResolvedValueOnce({
-      rows: [{ id: TEST_USER_ID, email: 'test@acadeno.com', role: 'student' }],
-    });
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
     mockRedis.get.mockResolvedValueOnce(null);  // OTP expired
 
     const res = await request(app)
@@ -312,17 +270,11 @@ describe('POST /auth/verify-mfa', () => {
   });
 
   test('returns 400 OTP_INVALID when OTP does not match', async () => {
-<<<<<<< HEAD
     mockClient.query
       .mockResolvedValueOnce({})                            // SET role
       .mockResolvedValueOnce({
         rows: [{ id: TEST_USER_ID, email: 'test@acadeno.com', role: 'student' }],
       });
-=======
-    mockClient.query.mockResolvedValueOnce({
-      rows: [{ id: TEST_USER_ID, email: 'test@acadeno.com', role: 'student' }],
-    });
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
     mockRedis.get.mockResolvedValueOnce('999999');  // stored OTP
 
     const res = await request(app)
@@ -336,10 +288,7 @@ describe('POST /auth/verify-mfa', () => {
   test('returns 200 with accessToken on valid OTP (trust_device = false)', async () => {
     const user = { id: TEST_USER_ID, email: 'test@acadeno.com', role: 'student' };
     mockClient.query
-<<<<<<< HEAD
       .mockResolvedValueOnce({})                   // SET role
-=======
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
       .mockResolvedValueOnce({ rows: [user] })    // SELECT user
       .mockResolvedValueOnce({ rows: [] })         // UPDATE reset counters
       .mockResolvedValueOnce({ rows: [] })         // INSERT refresh_tokens
@@ -373,10 +322,7 @@ describe('POST /auth/verify-mfa', () => {
   test('inserts trusted_device row when trust_device = true', async () => {
     const user = { id: TEST_USER_ID, email: 'test@acadeno.com', role: 'student' };
     mockClient.query
-<<<<<<< HEAD
       .mockResolvedValueOnce({})                   // SET role
-=======
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
       .mockResolvedValueOnce({ rows: [user] })    // SELECT user
       .mockResolvedValueOnce({ rows: [] })         // INSERT trusted_devices (ON CONFLICT)
       .mockResolvedValueOnce({ rows: [] })         // UPDATE reset counters
@@ -394,11 +340,7 @@ describe('POST /auth/verify-mfa', () => {
     expect(res.status).toBe(200);
 
     // Verify INSERT INTO trusted_devices was called
-<<<<<<< HEAD
     const insertCall = mockClient.query.mock.calls[2]; // Index 2 after SET, SELECT
-=======
-    const insertCall = mockClient.query.mock.calls[1];
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
     expect(insertCall[0]).toMatch(/INSERT INTO trusted_devices/);
     expect(insertCall[0]).toMatch(/ON CONFLICT/);
     expect(insertCall[1]).toContain(TEST_USER_ID);
@@ -407,10 +349,7 @@ describe('POST /auth/verify-mfa', () => {
   test('does NOT insert trusted_device when trust_device is omitted', async () => {
     const user = { id: TEST_USER_ID, email: 'test@acadeno.com', role: 'student' };
     mockClient.query
-<<<<<<< HEAD
       .mockResolvedValueOnce({})                   // SET role
-=======
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
       .mockResolvedValueOnce({ rows: [user] })    // SELECT user
       .mockResolvedValueOnce({ rows: [] })         // UPDATE reset counters
       .mockResolvedValueOnce({ rows: [] })         // INSERT refresh_tokens
@@ -427,22 +366,14 @@ describe('POST /auth/verify-mfa', () => {
 
     // No call with INSERT INTO trusted_devices
     const allQueries = mockClient.query.mock.calls.map(c => c[0]);
-<<<<<<< HEAD
     const trustedInserts = allQueries.filter(q => q && q.includes('INSERT INTO trusted_devices'));
-=======
-    const trustedInserts = allQueries.filter(q => q.includes('INSERT INTO trusted_devices'));
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
     expect(trustedInserts).toHaveLength(0);
   });
 
   test('returns 500 on unexpected error without leaking details', async () => {
-<<<<<<< HEAD
     mockClient.query
       .mockResolvedValueOnce({})                // SET role
       .mockRejectedValueOnce(new Error('DB gone'));
-=======
-    mockClient.query.mockRejectedValueOnce(new Error('DB gone'));
->>>>>>> db2d8eb874e2000e0bf05d72f9684533cc8f0906
 
     const res = await request(app)
       .post('/auth/verify-mfa')
