@@ -1,0 +1,32 @@
+# --- ACADENO LMS Global Gitignore ---
+
+# Dependencies
+node_modules/
+package-lock.json
+npm-debug.log*
+
+# Frameworks / Builds
+dist/
+build/
+.next/
+out/
+.vercel
+.turbo
+
+# IDEs / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.log
+
+# Environment
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# EPIC-08 Backups
+_backup/
+.claude
