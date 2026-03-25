@@ -29,3 +29,4 @@ Thumbs.db
 
 # EPIC-08 Backups
 _backup/
+.claude
