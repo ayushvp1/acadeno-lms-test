@@ -1,0 +1,20 @@
+PASS src/__tests__/epic05.test.js
+  EPIC-05: Course & Content Management
+    Course CRUD (HR / Admin)
+      √ POST /api/courses — HR can create a course (101 ms)
+      √ POST /api/courses — Student cannot create a course (10 ms)
+    Module & Content Management
+      √ POST /api/courses/:id/modules — Trainer can create a module (9 ms)
+    Task Lifecycle
+      √ POST /api/tasks — Trainer can create a task (9 ms)
+      √ POST /api/tasks/:id/submit — Student can submit a task (9 ms)
+      √ PATCH /api/tasks/:taskId/submissions/:submissionId/evaluate — Trainer can evaluate (8 ms)
+    Live Sessions
+      √ POST /api/courses/batches/:batchId/live-sessions — Trainer can create session (7 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       7 passed, 7 total
+Snapshots:   0 total
+Time:        2.397 s
+Ran all test suites matching /src\\__tests__\\epic05.test.js/i.
+Force exiting Jest: Have you considered using `--detectOpenHandles` to detect async operations that kept running after all tests finished?
