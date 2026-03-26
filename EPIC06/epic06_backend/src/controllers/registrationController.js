@@ -12,12 +12,14 @@ const { lookupPinCode } = require('../services/pinCodeService');
 const { 
   sendPaymentLinkEmail, 
   sendWelcomeCredentialsEmail,
-  sendEnrollmentSuccessEmail
+  sendEnrollmentSuccessEmail,
+  sendInvoiceEmail
 } = require('../services/emailService');
 const { generateTokens } = require('../utils/jwt');
 const redis = require('../utils/redis');
 const { getUploadedFilePath } = require('../services/fileService');
 const bcrypt = require('bcrypt');
+const { createNotification, NOTIFICATION_TYPES } = require('../utils/notificationHelper');
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -1200,6 +1202,24 @@ async function handlePaymentSuccess(req, res) {
       sendEnrollmentSuccessEmail(studentEmail, studentFirstName, courseName, logUrl, tempPassword || '').catch(err => {
         console.error('Failed to send enrollment success email:', err.message);
       });
+
+      // US-NOT-02: Send Payment Invoice Email
+      sendInvoiceEmail(
+        studentEmail,
+        studentFirstName,
+        amount,
+        courseName,
+        transaction_id || enrollment_id
+      ).catch(err => console.error('Failed to send invoice email:', err.message));
+
+      // US-NOT-01: In-App Notification for Payment Confirmation
+      createNotification(
+        userRes.rows[0].id,
+        NOTIFICATION_TYPES.PAYMENT_CONFIRMED,
+        'Payment Confirmed',
+        `Your payment for "${courseName}" has been successfully confirmed. Welcome to ACADENO!`,
+        enrollment_id
+      ).catch(err => console.error('Failed to send payment confirmation notification:', err.message));
     }
 
     // Update Redis cache keys (non-blocking)

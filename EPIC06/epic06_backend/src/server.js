@@ -26,6 +26,9 @@ async function startServer() {
     // 3. Register background jobs
     require('./jobs/leadArchiveJob').startLeadJobs();
     require('./jobs/liveSessionReminderJob').startLiveSessionReminderJob();
+    require('./jobs/progressAlertJob').startProgressAlertJob();
+    require('./jobs/leadFollowUpJob').startLeadFollowUpJob();
+    require('./jobs/batchStartJob').startBatchStartJob();
 
     // 4. Start HTTP server
     app.listen(PORT, () => {

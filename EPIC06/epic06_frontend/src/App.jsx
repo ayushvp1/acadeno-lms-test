@@ -28,6 +28,7 @@ import CourseManagementPage from './pages/hr/CourseManagementPage';
 import StudentStatsPage from './pages/hr/StudentStatsPage';
 import AnalyticsDashboardPage from './pages/admin/AnalyticsDashboardPage';
 import SystemSettingsPage from './pages/admin/SystemSettingsPage';
+import AuditLogPage from './pages/admin/AuditLogPage';
 import EnrollmentsPage from './pages/hr/EnrollmentsPage';
 import BatchListPage from './pages/hr/BatchListPage';
 import CreateBatchPage from './pages/hr/CreateBatchPage';
@@ -101,6 +102,7 @@ const App = () => {
                 {/* EPIC-08 Admin & HR */}
                 <Route path="/admin/analytics" element={<AnalyticsDashboardPage />} />
                 <Route path="/admin/settings" element={<SystemSettingsPage />} />
+                <Route path="/admin/audit-log" element={<AuditLogPage />} />
                 <Route path="/hr/enrollments" element={<EnrollmentsPage />} />
                 <Route path="/batches" element={<BatchListPage />} />
                 <Route path="/batches/new" element={<CreateBatchPage />} />

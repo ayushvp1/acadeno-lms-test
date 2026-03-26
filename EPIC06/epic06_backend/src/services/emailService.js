@@ -9,6 +9,45 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+/**
+ * US-NOT-02: Robust retry mechanism for transactional emails.
+ * Retries up to 3 times with a 10s delay.
+ */
+async function sendWithRetry(mailOptions, retries = 3) {
+    for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+            const info = await transporter.sendMail(mailOptions);
+            return info;
+        } catch (err) {
+            console.error(`[EMAIL RETRY] Attempt ${attempt} failed:`, err.message);
+            if (attempt === retries) {
+                // Final failure: notify ops team
+                await notifyOpsOfEmailFailure(err, mailOptions);
+                throw err;
+            }
+            // Delay before next attempt
+            await new Promise(resolve => setTimeout(resolve, 10000));
+        }
+    }
+}
+
+/**
+ * US-NOT-02: Alert operations team on final failure.
+ */
+async function notifyOpsOfEmailFailure(error, mailOptions) {
+    const opsEmail = process.env.EMAIL_USER; // Fallback to system email
+    try {
+        await transporter.sendMail({
+            from: process.env.EMAIL_FROM,
+            to: opsEmail,
+            subject: 'CRITICAL: Transactional Email Delivery Failure',
+            text: `A critical transactional email failed all 3 delivery attempts.\n\nError: ${error.message}\nTarget: ${mailOptions.to}\nSubject: ${mailOptions.subject}\n\nPlease check the system logs immediately.`,
+        });
+    } catch (opsErr) {
+        console.error('[OPS ALERT FAILED] Total communication breakdown:', opsErr.message);
+    }
+}
+
 async function sendOTPEmail(toEmail, otp, purpose) {
   const subjects = {
     reset: 'Your Password Reset OTP - Acadeno LMS',
@@ -20,7 +59,7 @@ async function sendOTPEmail(toEmail, otp, purpose) {
     mfa: `Your login verification code is: ${otp}\n\nThis code is valid for 10 minutes.\nIf you did not attempt to login, secure your account immediately.`,
   };
 
-  await transporter.sendMail({
+  await sendWithRetry({
     from: process.env.EMAIL_FROM,
     to: toEmail,
     subject: subjects[purpose],
@@ -29,7 +68,7 @@ async function sendOTPEmail(toEmail, otp, purpose) {
 }
 
 async function sendLockoutEmail(toEmail, lockedUntil) {
-  await transporter.sendMail({
+  await sendWithRetry({
     from: process.env.EMAIL_FROM,
     to: toEmail,
     subject: 'Your Account Has Been Locked - Acadeno LMS',
@@ -46,13 +85,47 @@ async function sendLeadArchiveEmail(toEmail, leadName, lastActivityDate) {
   });
 }
 
-async function sendFollowUpReminderEmail(toEmail, leadName, lastNote, followUpDate, leadLink) {
-  await transporter.sendMail({
-    from: process.env.EMAIL_FROM,
-    to: toEmail,
-    subject: `Follow-up Reminder: ${leadName}`,
-    text: `Daily Reminder: You have a scheduled follow-up for the lead "${leadName}".\n\nFollow-up Date: ${followUpDate}\nLast Note from BDA: ${lastNote || 'No notes available.'}\n\nDirect Link to Lead: ${leadLink}`,
-  });
+/**
+ * US-NOT-04: BDA Lead Follow-Up Reminder Email
+ */
+async function sendFollowUpReminderEmail(toEmail, bdaName, leadInfo) {
+    const { leadName, lastNote, daysSinceContact, leadLink, isEscalation } = leadInfo;
+    const strSubject = isEscalation 
+        ? `🚨 SECOND REMINDER: Follow-up required for ${leadName}`
+        : `📅 Follow-up Reminder: ${leadName}`;
+
+    await sendWithRetry({
+        from:    process.env.EMAIL_FROM,
+        to:      toEmail,
+        subject: strSubject,
+        html: `
+            <div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;padding:24px;border:1px solid #2563eb;border-radius:12px">
+                <h2 style="color:#1e3a5f">Lead Follow-Up Reminder</h2>
+                <p>Hi <strong>${bdaName}</strong>,</p>
+                <p>This is an automated reminder to follow up with <strong>${leadName}</strong>.</p>
+                
+                <div style="background:#f8fafc;padding:20px;border-radius:8px;margin:24px 0;border-left:4px solid #2563eb">
+                    <p style="margin:4px 0;color:#475569"><strong>Last Interaction Note:</strong><br>
+                    <span style="font-style:italic">"${lastNote || 'No notes yet'}"</span></p>
+                    <p style="margin:12px 0 0 0;color:#475569"><strong>Days since last contact:</strong> ${daysSinceContact || 'N/A'}</p>
+                </div>
+
+                <div style="text-align:center;margin:32px 0">
+                    <a href="${leadLink}" style="padding:12px 32px;background:#2563eb;color:#fff;text-decoration:none;border-radius:6px;font-weight:700">
+                        View Lead Details
+                    </a>
+                </div>
+
+                ${isEscalation ? `
+                <div style="background:#fef2f2;padding:12px;border-radius:6px;border:1px solid #fee2e2;color:#991b1b;font-size:13px">
+                    <strong>Note:</strong> This is a secondary reminder. No action was detected since the initial follow-up date 3 days ago.
+                </div>
+                ` : ''}
+
+                <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0">
+                <p style="color:#94a3b8;font-size:12px">Acadeno CRM — BDA Support Service</p>
+            </div>`
+    });
 }
 
 // ---------------------------------------------------------------------------
@@ -62,7 +135,7 @@ async function sendFollowUpReminderEmail(toEmail, leadName, lastNote, followUpDa
 // Delivers the student's login email and the system-generated plain-text password.
 // ---------------------------------------------------------------------------
 async function sendWelcomeCredentialsEmail(toEmail, studentName, plainPassword, loginUrl) {
-  await transporter.sendMail({
+  await sendWithRetry({
     from:    process.env.EMAIL_FROM,
     to:      toEmail,
     subject: 'Your Acadeno LMS Login Credentials',
@@ -93,7 +166,7 @@ async function sendWelcomeCredentialsEmail(toEmail, studentName, plainPassword, 
 // Delivers the enrollment fee payment link to the student.
 // ---------------------------------------------------------------------------
 async function sendPaymentLinkEmail(toEmail, studentName, paymentUrl, registrationNumber) {
-  await transporter.sendMail({
+  await sendWithRetry({
     from:    process.env.EMAIL_FROM,
     to:      toEmail,
     subject: `Payment Required — ${registrationNumber} — Acadeno LMS`,
@@ -120,7 +193,7 @@ async function sendPaymentLinkEmail(toEmail, studentName, paymentUrl, registrati
 // The wizardUrl contains a one-time secure token (?token=...).
 // ---------------------------------------------------------------------------
 async function sendRegistrationInviteEmail(toEmail, leadName, wizardUrl) {
-  await transporter.sendMail({
+  await sendWithRetry({
     from:    process.env.EMAIL_FROM,
     to:      toEmail,
     subject: 'Complete Your Enrollment — Acadeno LMS',
@@ -146,7 +219,7 @@ async function sendRegistrationInviteEmail(toEmail, leadName, wizardUrl) {
 // Sent after payment is confirmed - includes login credentials
 // ---------------------------------------------------------------------------
 async function sendEnrollmentSuccessEmail(toEmail, studentName, courseName, loginUrl, plainPassword) {
-  await transporter.sendMail({
+  await sendWithRetry({
     from:    process.env.EMAIL_FROM,
     to:      toEmail,
     subject: 'Welcome to the Course! — Enrollment Confirmed',
@@ -194,7 +267,7 @@ async function sendEnrollmentSuccessEmail(toEmail, studentName, courseName, logi
 //   courseTitle  - Title of the parent course
 // ---------------------------------------------------------------------------
 async function sendTranscodeFailureEmail(toEmail, trainerName, contentTitle, courseTitle) {
-  await transporter.sendMail({
+  await sendWithRetry({
     from:    process.env.EMAIL_FROM,
     to:      toEmail,
     subject: `Video Transcoding Failed — ${contentTitle} — Acadeno LMS`,
@@ -232,7 +305,7 @@ async function sendTaskEvaluationEmail(toEmail, studentName, taskTitle, grade, s
   const strGradeColor  = grade === 'pass' ? '#16a34a' : '#ef4444';
   const strScoreText   = score !== null && score !== undefined ? ` — Score: ${score}/100` : '';
 
-  await transporter.sendMail({
+  await sendWithRetry({
     from:    process.env.EMAIL_FROM,
     to:      toEmail,
     subject: `Task Evaluated: ${taskTitle} — ${strGradeLabel} — Acadeno LMS`,
@@ -275,7 +348,7 @@ async function sendTaskEvaluationEmail(toEmail, studentName, taskTitle, grade, s
 //   joinUrl       - Zoom/Meet/Teams URL for the session
 // ---------------------------------------------------------------------------
 async function sendLiveSessionReminderEmail(toEmail, studentName, sessionTitle, courseName, startTime, joinUrl) {
-  await transporter.sendMail({
+  await sendWithRetry({
     from:    process.env.EMAIL_FROM,
     to:      toEmail,
     subject: `Live Session Starting Soon: ${sessionTitle} — Acadeno LMS`,
@@ -318,7 +391,7 @@ async function sendLiveSessionReminderEmail(toEmail, studentName, sessionTitle, 
 //   verificationUrl - Public URL for employer verification
 // ---------------------------------------------------------------------------
 async function sendCertificateEmail(toEmail, studentName, courseName, completionDate, verificationUrl) {
-  await transporter.sendMail({
+  await sendWithRetry({
     from:    process.env.EMAIL_FROM,
     to:      toEmail,
     subject: `Congratulations! Your Certificate for ${courseName} is Ready — Acadeno LMS`,
@@ -357,7 +430,7 @@ async function sendCertificateEmail(toEmail, studentName, courseName, completion
 //   replyBody    - The trainer's reply text
 // ---------------------------------------------------------------------------
 async function sendDiscussionReplyEmail(toEmail, studentName, postTitle, replyBody) {
-  await transporter.sendMail({
+  await sendWithRetry({
     from:    process.env.EMAIL_FROM,
     to:      toEmail,
     subject: `Your Discussion Post Received a Reply — Acadeno LMS`,
@@ -384,7 +457,7 @@ async function sendDiscussionReplyEmail(toEmail, studentName, postTitle, replyBo
 // Includes critical dates, schedules, and a direct dashboard link.
 // ---------------------------------------------------------------------------
 async function sendBatchAssignmentEmail({ toEmail, trainerName, batchName, courseName, startDate, schedule, studentCount, dashboardUrl }) {
-  await transporter.sendMail({
+  await sendWithRetry({
     from:    process.env.EMAIL_FROM,
     to:      toEmail,
     subject: `New Batch Assigned: ${batchName} — Acadeno LMS`,
@@ -433,4 +506,183 @@ module.exports = {
   sendDiscussionReplyEmail,
   // US-TR-08
   sendBatchAssignmentEmail,
+  // US-NOT-02
+  sendInvoiceEmail,
+  sendStudentBatchAssignmentEmail,
+  sendAtRiskStudentEmail,
+  sendAtRiskTrainerSummaryEmail,
+  sendBatchStartReminderEmail
 };
+
+
+/**
+ * US-NOT-03: At-Risk Student Encouragement Email
+ */
+async function sendAtRiskStudentEmail(toEmail, studentName, courseName, stats) {
+    const { completionPct, overdueCount } = stats;
+    await sendWithRetry({
+        from:    process.env.EMAIL_FROM,
+        to:      toEmail,
+        subject: `Checking In: Your Progress in ${courseName} — Acadeno LMS`,
+        html: `
+            <div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;padding:24px;border:1px solid #f59e0b;border-radius:12px">
+                <h2 style="color:#1e3a5f">Hi ${studentName},</h2>
+                <p style="color:#475569;font-size:16px;line-height:1.5">We noticed you've been having a bit of trouble keeping up with <strong>${courseName}</strong> lately. Don't worry, we're here to help you get back on track!</p>
+                
+                <div style="background:#fff7ed;padding:20px;border-radius:8px;margin:24px 0;border-left:4px solid #f59e0b">
+                    <h3 style="margin:0 0 12px 0;color:#9a3412;font-size:14px;text-transform:uppercase;letter-spacing:1px">Current Status</h3>
+                    <p style="margin:4px 0;color:#475569"><strong>Completion:</strong> ${completionPct}%</p>
+                    <p style="margin:4px 0;color:#475569"><strong>Overdue Tasks:</strong> ${overdueCount}</p>
+                </div>
+
+                <p style="color:#475569">Consistency is key to mastering new skills. If you're finding the material challenging or need more time, please reach out to your trainer. They're happy to support you!</p>
+                
+                <div style="text-align:center;margin:32px 0">
+                    <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/login" style="padding:12px 32px;background:#2563eb;color:#fff;text-decoration:none;border-radius:6px;font-weight:700">
+                        Continue Learning
+                    </a>
+                </div>
+
+                <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0">
+                <p style="color:#94a3b8;font-size:12px">Keep going! Every small step counts towards your goal.<br>Acadeno Learning Management System</p>
+            </div>`
+    });
+}
+
+/**
+ * US-NOT-03: Trainer Summary of At-Risk Students
+ */
+async function sendAtRiskTrainerSummaryEmail(toEmail, trainerName, batchName, atRiskStudents) {
+    const studentRows = atRiskStudents.map(s => `
+        <tr style="border-bottom:1px solid #f1f5f9">
+            <td style="padding:12px;color:#1e293b;font-weight:500">${s.name}</td>
+            <td style="padding:12px;color:#475569">${s.completionPct}%</td>
+            <td style="padding:12px;color:#ef4444;font-weight:600">${s.overdueCount}</td>
+        </tr>
+    `).join('');
+
+    await sendWithRetry({
+        from:    process.env.EMAIL_FROM,
+        to:      toEmail,
+        subject: `Action Required: At-Risk Students in Batch ${batchName} — Acadeno LMS`,
+        html: `
+            <div style="font-family:Arial,sans-serif;max-width:640px;margin:auto;padding:24px;border:1px solid #ef4444;border-radius:12px">
+                <h2 style="color:#1e3a5f">At-Risk Student Alert</h2>
+                <p>Hi <strong>${trainerName}</strong>,</p>
+                <p>The following students in your batch <strong>${batchName}</strong> have fallen below the progress threshold (< 40% completion or 3+ overdue tasks) as of today.</p>
+                
+                <table style="width:100%;border-collapse:collapse;margin:24px 0">
+                    <thead>
+                        <tr style="background:#fef2f2;text-align:left">
+                            <th style="padding:12px;color:#991b1b;font-size:13px">Student Name</th>
+                            <th style="padding:12px;color:#991b1b;font-size:13px">Completion</th>
+                            <th style="padding:12px;color:#991b1b;font-size:13px">Overdue Tasks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${studentRows}
+                    </tbody>
+                </table>
+
+                <p style="color:#475569">We recommend reaching out to these students individually to offer support and ensure they don't fall further behind.</p>
+                
+                <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0">
+                <p style="color:#94a3b8;font-size:12px">Acadeno Learning Management System — Trainer Reporting Service</p>
+            </div>`
+    });
+}
+
+/**
+ * US-NOT-02: Payment Invoice Email
+ */
+async function sendInvoiceEmail(toEmail, studentName, amount, courseName, invoiceId) {
+    await sendWithRetry({
+        from:    process.env.EMAIL_FROM,
+        to:      toEmail,
+        subject: `Payment Invoice — #${invoiceId} — Acadeno LMS`,
+        html: `
+            <div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;padding:24px;border:1px solid #e2e8f0;border-radius:8px">
+                <h2 style="color:#1e3a5f">Payment Invoice</h2>
+                <p>Hi <strong>${studentName}</strong>,</p>
+                <p>Thank you for your payment. Here is your transaction summary:</p>
+                <table style="width:100%;border-collapse:collapse;margin:16px 0">
+                    <tr style="border-bottom:1px solid #f1f5f9"><td style="padding:10px;color:#64748b">Invoice ID</td><td style="padding:10px;font-weight:600">#${invoiceId}</td></tr>
+                    <tr style="border-bottom:1px solid #f1f5f9"><td style="padding:10px;color:#64748b">Course</td><td style="padding:10px;font-weight:600">${courseName}</td></tr>
+                    <tr style="border-bottom:1px solid #f1f5f9"><td style="padding:10px;color:#64748b">Amount Paid</td><td style="padding:10px;font-weight:600;color:#16a34a">₹${amount}</td></tr>
+                    <tr><td style="padding:10px;color:#64748b">Date</td><td style="padding:10px;font-weight:600">${new Date().toLocaleDateString()}</td></tr>
+                </table>
+                <p style="color:#64748b;font-size:13px">This is a system-generated invoice for your records.</p>
+                <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0">
+                <p style="color:#94a3b8;font-size:12px">Acadeno Learning Management System</p>
+            </div>`
+    });
+}
+
+/**
+ * US-NOT-02: Student Batch Assignment Alert
+ */
+async function sendStudentBatchAssignmentEmail(toEmail, studentName, batchName, courseName, trainerName) {
+    await sendWithRetry({
+        from:    process.env.EMAIL_FROM,
+        to:      toEmail,
+        subject: `Success: Trainer Assigned to Your Batch — Acadeno LMS`,
+        html: `
+            <div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;padding:24px;border:1px solid #2563eb;border-radius:12px">
+                <h2 style="color:#2563eb">Trainer Assigned!</h2>
+                <p>Hi <strong>${studentName}</strong>,</p>
+                <p>We are excited to announce that a trainer has been assigned to your batch at Acadeno.</p>
+                <div style="background:#f8fafc;padding:16px;border-radius:8px;margin:16px 0">
+                    <p style="margin:4px 0"><strong>Batch:</strong> ${batchName}</p>
+                    <p style="margin:4px 0"><strong>Course:</strong> ${courseName}</p>
+                    <p style="margin:4px 0"><strong>Trainer:</strong> ${trainerName}</p>
+                </div>
+                <p>You can now view your schedule and session links in your student dashboard.</p>
+                <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0">
+                <p style="color:#94a3b8;font-size:12px">Acadeno Learning Management System</p>
+            </div>`
+    });
+}
+
+/**
+ * US-NOT-05: Batch Start Reminder Email
+ */
+async function sendBatchStartReminderEmail(toEmail, userName, batchInfo) {
+    const { batchName, courseName, startDate, startTime, schedule, meetingUrl } = batchInfo;
+    const dashboardUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/login`;
+
+    await sendWithRetry({
+        from:    process.env.EMAIL_FROM,
+        to:      toEmail,
+        subject: `Reminder: Your Batch "${batchName}" Starts in 48 Hours!`,
+        html: `
+            <div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;padding:24px;border:1px solid #16a34a;border-radius:12px">
+                <h2 style="color:#1e3a5f">Get Ready to Start!</h2>
+                <p>Hi <strong>${userName}</strong>,</p>
+                <p>This is a friendly reminder that your batch <strong>${batchName}</strong> for <strong>${courseName}</strong> is scheduled to begin in 48 hours.</p>
+                
+                <div style="background:#f0fdf4;padding:20px;border-radius:8px;margin:24px 0;border-left:4px solid #16a34a">
+                    <p style="margin:4px 0;color:#166534"><strong>Start Date:</strong> ${startDate}</p>
+                    <p style="margin:4px 0;color:#166534"><strong>Time:</strong> ${startTime || 'To be announced'}</p>
+                    <p style="margin:4px 0;color:#166534"><strong>Schedule:</strong> ${schedule}</p>
+                </div>
+
+                ${meetingUrl ? `
+                <div style="background:#f8fafc;padding:16px;border-radius:8px;margin:16px 0;border:1px solid #e2e8f0;text-align:center">
+                    <p style="margin:0 0 12px 0;font-size:14px;color:#64748b">Session Link:</p>
+                    <a href="${meetingUrl}" style="color:#2563eb;font-weight:700;word-break:break-all">${meetingUrl}</a>
+                </div>
+                ` : `
+                <p style="color:#64748b;font-size:13px;font-style:italic">The meeting link will be shared via your dashboard before the session begins.</p>
+                `}
+
+                <div style="text-align:center;margin:32px 0">
+                    <a href="${dashboardUrl}" style="padding:12px 32px;background:#2563eb;color:#fff;text-decoration:none;border-radius:6px;font-weight:700">
+                        Go to Dashboard
+                    </a>
+                </div>
+
+                <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0">
+                <p style="color:#94a3b8;font-size:12px">Acadeno Learning Management System — Student Success Service</p>
+            </div>`
+    });
+}

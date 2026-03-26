@@ -109,7 +109,7 @@ function startLeadJobs() {
   cron.schedule(CRON_SCHEDULE, async () => {
     console.log('[Cron] Starting Daily Lead Management Jobs...');
     await archiveInactiveLeads();
-    await sendFollowUpReminders();
+    // await sendFollowUpReminders(); // Replaced by US-NOT-04 LeadFollowUpJob
     console.log('[Cron] Daily Lead Management Jobs completed.');
   });
 }

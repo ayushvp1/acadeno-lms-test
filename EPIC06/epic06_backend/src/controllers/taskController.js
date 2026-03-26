@@ -42,7 +42,13 @@ const STR_TASK_TYPE_QUIZ          = 'quiz';
 const STR_TASK_TYPE_ASSIGNMENT    = 'assignment';
 const STR_TASK_TYPE_PROJECT       = 'project';
 
-const { createNotification, NOTIFICATION_TYPES } = require('../utils/notificationHelper');
+const { 
+    createNotification, 
+    NOTIFICATION_TYPES 
+} = require('../utils/notificationHelper');
+const { 
+    sendTaskEvaluationEmail 
+} = require('../services/emailService');
 
 const ARR_VALID_SUBMISSION_MIMES  = [
   'application/pdf',
@@ -235,7 +241,39 @@ async function createTask(req, res) {
       ]
     );
 
-    return res.status(201).json({ task: objResult.rows[0] });
+    const task = objResult.rows[0];
+
+    // US-NOT-01: Notify student(s)
+    if (target_student_id) {
+        // Individual task: notify target student
+        createNotification(
+            target_student_id,
+            NOTIFICATION_TYPES.TASK_ASSIGNED,
+            'New Task Assigned',
+            `You have been assigned a new task: "${title}". Due date: ${datDue.toLocaleDateString()}.`,
+            task.id
+        ).catch(err => console.error('Failed to send task notification:', err.message));
+    } else {
+        // Batch task: notify all students in the batch
+        client.query(
+            `SELECT user_id FROM students s 
+             JOIN enrollments e ON s.id = e.student_id 
+             WHERE e.batch_id = $1 AND e.status = 'active'`,
+            [batch_id]
+        ).then(res => {
+            res.rows.forEach(row => {
+                createNotification(
+                    row.user_id,
+                    NOTIFICATION_TYPES.TASK_ASSIGNED,
+                    'New Batch Task',
+                    `A new task "${title}" has been added to your batch. Due date: ${datDue.toLocaleDateString()}.`,
+                    task.id
+                ).catch(err => console.error('Failed to send batch task notification:', err.message));
+            });
+        }).catch(err => console.error('Failed to fetch students for batch notification:', err.message));
+    }
+
+    return res.status(201).json({ task: task });
   } catch (err) {
     console.error('createTask error:', err.message);
     return res.status(500).json({ error: 'Internal server error' });
@@ -714,7 +752,33 @@ async function evaluateSubmission(req, res) {
       ]
     );
 
-    return res.json({ submission: objResult.rows[0] });
+    const submission = objResult.rows[0];
+
+    // US-NOT-02: Send Task Evaluation Email
+    const studentId = submission.student_id;
+    client.query(
+      `SELECT u.email, u.first_name, t.title as task_title
+       FROM users u
+       JOIN tasks t ON t.id = $2
+       WHERE u.id = $1`,
+      [studentId, strTaskId]
+    ).then(res => {
+      if (res.rows.length > 0) {
+        const { email, first_name, task_title } = res.rows[0];
+        const dashboardUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/student/tasks`;
+        sendTaskEvaluationEmail(
+          email,
+          first_name,
+          task_title,
+          grade,
+          score,
+          feedback,
+          dashboardUrl
+        ).catch(err => console.error('Failed to send task evaluation email:', err.message));
+      }
+    }).catch(err => console.error('Failed to fetch student details for evaluation email:', err.message));
+
+    return res.json({ submission: submission });
   } catch (err) {
     console.error('evaluateSubmission error:', err.message);
     return res.status(500).json({ error: 'Internal server error' });

@@ -25,6 +25,11 @@ const NOTIFICATION_TYPES = Object.freeze({
   CERTIFICATE_READY: 'certificate_ready',
   TASK_REOPENED:     'task_reopened',
   BATCH_ASSIGNED:    'batch_assigned',
+  TASK_ASSIGNED:     'task_assigned',
+  PAYMENT_CONFIRMED: 'payment_confirmed',
+  TRAINER_ASSIGNED:  'trainer_assigned',
+  LEAD_FOLLOW_UP:    'lead_follow_up',
+  BATCH_START:       'batch_start_reminder',
 });
 
 // ---------------------------------------------------------------------------
@@ -34,7 +39,7 @@ const NOTIFICATION_TYPES = Object.freeze({
 //
 // Parameters:
 //   userId      — UUID of the recipient (users.id)
-//   type        — One of: 'discussion_reply', 'task_evaluated', 'certificate_ready'
+//   type        — One of the NOTIFICATION_TYPES
 //   title       — Short summary shown in the bell-icon dropdown
 //   body        — Full notification message
 //   referenceId — Optional UUID linking to the triggering resource
@@ -52,7 +57,8 @@ async function createNotification(userId, type, title, body, referenceId = null)
   const client = await pool.connect();
 
   try {
-    await client.query(`SET app.current_user_role = '${STR_ROLE_SUPER_ADMIN}'`);
+    // Correctly set session variable using set_config
+    await client.query('SELECT set_config($1, $2, false)', ['app.current_user_role', STR_ROLE_SUPER_ADMIN]);
 
     const objResult = await client.query(
       `INSERT INTO notifications

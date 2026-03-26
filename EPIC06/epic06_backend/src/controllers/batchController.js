@@ -5,7 +5,10 @@
 
 const { pool } = require('../db/index'); 
 const { createNotification, NOTIFICATION_TYPES } = require('../utils/notificationHelper');
-const emailService = require('../services/emailService');
+const { 
+  sendBatchAssignmentEmail,
+  sendStudentBatchAssignmentEmail
+} = require('../services/emailService');
 
 /**
  * US-HR-01: Create a new batch
@@ -38,9 +41,10 @@ async function createBatch(req, res) {
 
     await client.query('COMMIT');
     
-    // US-TR-08: Notify trainer
+    // US-NOT-01: Notify trainer and students
     if (trainer_id) {
         await notifyTrainerOfAssignment(client, result.rows[0].id, trainer_id);
+        notifyStudentsOfTrainerAssignment(result.rows[0].id, trainer_id).catch(() => {});
     }
 
     return res.status(201).json({ batch: result.rows[0] });
@@ -140,9 +144,10 @@ async function updateBatch(req, res) {
       params
     );
 
-    // US-TR-08: Notify trainer
+    // US-NOT-01: Notify trainer and students
     if (updates.trainer_id) {
         await notifyTrainerOfAssignment(client, id, updates.trainer_id);
+        notifyStudentsOfTrainerAssignment(id, updates.trainer_id).catch(() => {});
     }
 
     return res.json({ batch: result.rows[0] });
@@ -177,8 +182,9 @@ async function assignTrainer(req, res) {
 
     await client.query('UPDATE batches SET trainer_id = $2 WHERE id = $1', [id, trainer_id]);
     
-    // US-TR-08: Notify trainer
+    // US-NOT-01: Notify trainer and students
     await notifyTrainerOfAssignment(client, id, trainer_id);
+    notifyStudentsOfTrainerAssignment(id, trainer_id).catch(() => {});
     
     return res.json({ message: 'Trainer assigned successfully' });
   } catch (err) {
@@ -241,8 +247,9 @@ async function autoAssignTrainer(req, res) {
         const trainerId = bestTrainerRes.rows[0].trainer_id;
         await client.query('UPDATE batches SET trainer_id = $2 WHERE id = $1', [id, trainerId]);
         
-        // US-TR-08: Notify trainer
+        // US-NOT-01: Notify trainer and students
         await notifyTrainerOfAssignment(client, id, trainerId);
+        notifyStudentsOfTrainerAssignment(id, trainerId).catch(() => {});
         
         return res.json({ 
             message: 'Auto-assigned successfully', 
@@ -372,7 +379,7 @@ async function notifyTrainerOfAssignment(clientId, batchId, trainerId) {
         );
 
         // 2. Email Notification
-        await emailService.sendBatchAssignmentEmail({
+        await sendBatchAssignmentEmail({
             toEmail: row.trainer_email,
             trainerName: row.trainer_name,
             batchName: row.batch_name,
@@ -386,6 +393,56 @@ async function notifyTrainerOfAssignment(clientId, batchId, trainerId) {
         console.log(`[NOTIFY] Assigned trainer ${trainerId} notified for batch ${batchId}`);
     } catch (err) {
         console.error('[NOTIFY ERROR] Failed to notify trainer:', err.message);
+    }
+}
+
+/**
+ * US-NOT-01: Notify students when a trainer is assigned to their batch.
+ */
+async function notifyStudentsOfTrainerAssignment(batchId, trainerId) {
+    if (!trainerId) return;
+    try {
+        const detailsRes = await pool.query(`
+            SELECT b.name as batch_name, c.name as course_name, u.full_name as trainer_name
+            FROM batches b
+            JOIN courses c ON b.course_id = c.id
+            JOIN users u ON u.id = $2
+            WHERE b.id = $1
+        `, [batchId, trainerId]);
+
+        if (detailsRes.rows.length === 0) return;
+        const { batch_name: batchName, course_name: courseName, trainer_name: trainerName } = detailsRes.rows[0];
+
+        const studentsRes = await pool.query(`
+            SELECT u.user_id, u.email, u.first_name FROM students s 
+            JOIN enrollments e ON s.id = e.student_id 
+            JOIN users u ON s.user_id = u.id
+            WHERE e.batch_id = $1 AND e.status = 'active'
+        `, [batchId]);
+
+        Promise.all(studentsRes.rows.map(row => {
+            // In-App
+            const nP = createNotification(
+                row.user_id,
+                NOTIFICATION_TYPES.TRAINER_ASSIGNED,
+                'Trainer Assigned',
+                `A trainer (${trainerName}) has been assigned to your batch "${batchName}".`,
+                batchId
+            );
+            
+            // Email (US-NOT-02)
+            const eP = row.email ? sendStudentBatchAssignmentEmail(
+                row.email,
+                row.first_name,
+                batchName,
+                courseName,
+                trainerName
+            ).catch(err => console.error('Email assignment alert failed:', err.message)) : Promise.resolve();
+            
+            return Promise.all([nP, eP]);
+        })).catch(err => console.error('Batch student notification loop failed:', err.message));
+    } catch (err) {
+        console.error('Failed to notify students of trainer assignment:', err.message);
     }
 }
 

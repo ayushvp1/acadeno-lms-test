@@ -105,6 +105,67 @@ async function getAnalytics(req, res) {
   }
 }
 
+/**
+ * US-NOT-06: List audit logs with filters
+ */
+async function getAuditLogs(req, res) {
+    const { userId, actionType, startDate, endDate } = req.query;
+    const client = await pool.connect();
+    try {
+        await client.query("SELECT set_config('app.current_user_role', $1::text, false)", [req.user.role]);
+
+        let queryStr = `
+            SELECT 
+                a.id, a.action_type, a.resource_type, a.resource_id, a.status, 
+                a.details, a.ip_address, a.created_at,
+                u.email as actor_email,
+                u.role as actor_role,
+                u.full_name as actor_name
+            FROM audit_logs a
+            JOIN users u ON a.actor_id = u.id
+            WHERE 1=1
+        `;
+        const params = [];
+
+        if (userId) {
+            params.push(userId);
+            queryStr += ` AND a.actor_id = $${params.length}`;
+        }
+        if (actionType) {
+            params.push(actionType);
+            queryStr += ` AND a.action_type = $${params.length}`;
+        }
+        if (startDate) {
+            params.push(startDate);
+            queryStr += ` AND a.created_at >= $${params.length}`;
+        }
+        if (endDate) {
+            params.push(endDate);
+            queryStr += ` AND a.created_at <= $${params.length}`;
+        }
+
+        queryStr += ` ORDER BY a.created_at DESC LIMIT 100`;
+
+        const result = await client.query(queryStr, params);
+        return res.json({ logs: result.rows });
+    } catch (err) {
+        console.error('GET AUDIT LOGS ERROR:', err.message);
+        return res.status(500).json({ error: 'Internal server error' });
+    } finally {
+        client.release();
+    }
+}
+
+/**
+ * US-NOT-06: Strict DELETE protection (403)
+ */
+async function deleteAuditLog(req, res) {
+    return res.status(403).json({ 
+        error: 'Forbidden', 
+        message: 'Audit records are immutable and cannot be deleted.' 
+    });
+}
+
 module.exports = {
-  listSettings, updateSetting, getAnalytics
+  listSettings, updateSetting, getAnalytics, getAuditLogs, deleteAuditLog
 };

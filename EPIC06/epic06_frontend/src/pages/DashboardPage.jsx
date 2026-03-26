@@ -44,10 +44,15 @@ const DashboardPage = () => {
       setUnreadCount(prev => Math.max(0, prev - 1));
       setNotifications(prev => prev.filter(n => n.id !== id));
       
-      // Navigate based on type
-      if (type === 'batch_assigned' && refId) {
+      // US-NOT-01: Navigate based on type
+      if ((type === 'batch_assigned' || type === 'trainer_assigned') && refId) {
         if (user.role === 'trainer') navigate(`/trainer/batch/${refId}/dashboard`);
         else navigate(`/batches/${refId}`);
+      } else if (type === 'task_assigned' || type === 'task_evaluated') {
+        if (user.role === 'trainer') navigate('/trainer/tasks');
+        else navigate('/student/tasks'); 
+      } else if (type === 'payment_confirmed') {
+        navigate('/hr/enrollments'); // For staff, show enrollments
       }
     } catch (_) {}
   };
@@ -111,7 +116,15 @@ const DashboardPage = () => {
                           <ExternalLink size={12} color="#2563eb" />
                         </div>
                         <p style={{ fontSize: '12px', color: '#64748b', margin: 0, lineHeight: 1.4 }}>{n.body}</p>
-                        <span style={{ fontSize: '10px', color: '#94a3b8' }}>{new Date(n.created_at).toLocaleString()}</span>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
+                          <span style={{ fontSize: '10px', color: '#94a3b8' }}>{new Date(n.created_at).toLocaleString()}</span>
+                          <span style={{ 
+                            fontSize: '9px', padding: '2px 6px', borderRadius: '4px', 
+                            background: '#f1f5f9', color: '#64748b', textTransform: 'uppercase', fontWeight: 600
+                          }}>
+                            {n.type.replace('_', ' ')}
+                          </span>
+                        </div>
                       </div>
                     ))
                   )}

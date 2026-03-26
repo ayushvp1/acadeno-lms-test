@@ -11,6 +11,8 @@ const StudentDashboard = () => {
   const [loading, setLoading]     = useState(true);
   const [announcements, setAnnouncements] = useState([]);
   const [intUnread, setIntUnread] = useState(0);
+  const [notifications, setNotifications] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
   const navigate                  = useNavigate();
   const { user, logout }          = useAuth();
 
@@ -33,7 +35,45 @@ const StudentDashboard = () => {
     };
     fetchData();
     fetchUnread();
+    const interval = setInterval(fetchUnread, 60000); // Polling for notifications
+    return () => {
+        clearInterval(interval);
+    };
   }, [logout]);
+
+  const fetchNotifications = async () => {
+    try {
+      const res = await axiosInstance.get('/api/student/notifications');
+      setNotifications(res.data.notifications || []);
+    } catch (_) {}
+  };
+
+  const handleToggleNotifications = () => {
+    if (!showNotifications) fetchNotifications();
+    setShowNotifications(!showNotifications);
+  };
+
+  const markRead = async (id, refId, type) => {
+    try {
+      await axiosInstance.patch(`/api/student/notifications/${id}/read`);
+      setIntUnread(prev => Math.max(0, prev - 1));
+      setNotifications(prev => prev.filter(n => n.id !== id));
+      setShowNotifications(false);
+      
+      // US-NOT-01: Navigate to relevant page
+      if (type === 'task_assigned' || type === 'task_evaluated' || type === 'task_reopened') {
+        navigate('/student/tasks');
+      } else if (type === 'payment_confirmed') {
+        navigate('/student/dashboard');
+      } else if (type === 'trainer_assigned' || type === 'batch_assigned') {
+        navigate('/student/dashboard'); // Or specific course if refId exists
+      } else if (type === 'discussion_reply') {
+        navigate('/student/discussions');
+      } else if (type === 'certificate_ready') {
+        navigate('/student/progress');
+      }
+    } catch (_) {}
+  };
 
   useEffect(() => {
     const fetchAnnouncements = async (batchId) => {
@@ -104,27 +144,79 @@ const StudentDashboard = () => {
             Discussions
           </span>
 
-          {/* ── Notification Bell ── */}
-          <span
-            className="student-nav-link"
-            onClick={() => navigate('/student/dashboard')}
-            style={{ position: 'relative', cursor: 'pointer' }}
-            title="Notifications"
-          >
-            <Bell size={18} />
-            {intUnread > 0 && (
-              <span style={{
-                position: 'absolute', top: -6, right: -6,
-                background: 'var(--error)', color: 'white',
-                borderRadius: '50%', fontSize: 10, fontWeight: 700,
-                width: 16, height: 16, display: 'flex',
-                alignItems: 'center', justifyContent: 'center',
-                lineHeight: 1,
-              }}>
-                {intUnread > 9 ? '9+' : intUnread}
-              </span>
+          {/* ── Notification Bell (US-NOT-01) ── */}
+          <div style={{ position: 'relative' }}>
+            <span
+                className={`student-nav-link ${showNotifications ? 'active' : ''}`}
+                onClick={handleToggleNotifications}
+                style={{ position: 'relative', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                title="Notifications"
+            >
+                <Bell size={18} />
+                {intUnread > 0 && (
+                <span style={{
+                    position: 'absolute', top: -6, right: -6,
+                    background: 'var(--error)', color: 'white',
+                    borderRadius: '50%', fontSize: 10, fontWeight: 700,
+                    width: 16, height: 16, display: 'flex',
+                    alignItems: 'center', justifyContent: 'center',
+                    lineHeight: 1,
+                }}>
+                    {intUnread > 9 ? '9+' : intUnread}
+                </span>
+                )}
+            </span>
+
+            {showNotifications && (
+                <div className="notifications-dropdown" style={{
+                    position: 'absolute', top: '40px', right: '0',
+                    width: '320px', background: 'white', border: '1px solid var(--gray-border)',
+                    borderRadius: '12px', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)',
+                    zIndex: 1000, padding: '16px'
+                }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                        <h4 style={{ margin: 0, fontSize: '14px', fontWeight: 800, color: 'var(--navy-bg)' }}>Recent Alerts</h4>
+                        <button onClick={() => setShowNotifications(false)} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}>
+                            <X size={16} />
+                        </button>
+                    </div>
+                    
+                    <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                        {notifications.length === 0 ? (
+                            <p style={{ textAlign: 'center', color: '#94a3b8', fontSize: '12px', padding: '20px' }}>No new notifications</p>
+                        ) : (
+                            notifications.map(n => (
+                                <div 
+                                    key={n.id} 
+                                    onClick={() => markRead(n.id, n.reference_id, n.type)}
+                                    style={{
+                                        padding: '12px', borderBottom: '1px solid #f1f5f9', cursor: 'pointer',
+                                        transition: 'background 0.2s', borderRadius: '8px', marginBottom: '4px'
+                                    }}
+                                    onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'}
+                                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                                >
+                                    <div style={{ fontSize: '13px', fontWeight: 700, marginBottom: '2px', color: 'var(--navy-bg)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        {n.title}
+                                        <ExternalLink size={12} color="var(--primary-blue)" />
+                                    </div>
+                                    <p style={{ fontSize: '12px', color: '#64748b', margin: 0, lineHeight: 1.4 }}>{n.body}</p>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
+                                        <span style={{ fontSize: '10px', color: '#94a3b8' }}>{new Date(n.created_at).toLocaleString()}</span>
+                                        <span style={{ 
+                                            fontSize: '9px', padding: '2px 6px', borderRadius: '4px', 
+                                            background: '#f1f5f9', color: '#64748b', textTransform: 'uppercase', fontWeight: 600
+                                        }}>
+                                            {n.type.replace('_', ' ')}
+                                        </span>
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                </div>
             )}
-          </span>
+          </div>
 
           {/* Logout */}
           <span

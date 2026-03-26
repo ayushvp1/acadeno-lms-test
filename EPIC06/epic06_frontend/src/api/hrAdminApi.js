@@ -35,6 +35,7 @@ export const hrAdminApi = {
   listSettings: () => axiosInstance.get('/api/admin/settings').then(r => r.data),
   updateSetting: (key, data) => axiosInstance.patch(`/api/admin/settings/${key}`, data).then(r => r.data),
   getAnalytics: () => axiosInstance.get('/api/admin/analytics').then(r => r.data),
+  getAuditLogs: (params) => axiosInstance.get('/api/admin/audit-logs', { params }).then(r => r.data),
 };
 
 export default hrAdminApi;
