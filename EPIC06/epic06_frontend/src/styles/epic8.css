@@ -1,0 +1,214 @@
+/* ==========================================================================
+   ACADENO LMS — EPIC 8 HR & ADMIN Styles
+   ========================================================================== */
+
+:root {
+    --epic8-primary: #6366f1;
+    --epic8-secondary: #0ea5e9;
+    --epic8-accent: #f59e0b;
+    --epic8-card-bg: rgba(255, 255, 255, 0.7);
+    --epic8-glass-border: rgba(255, 255, 255, 0.3);
+}
+
+.hr-container, .admin-container {
+    padding: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* Glassmorphism Cards */
+.glass-card {
+    background: var(--epic8-card-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--epic8-glass-border);
+    border-radius: 1.5rem;
+    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 48px rgba(31, 38, 135, 0.15);
+}
+
+/* Page Header */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2.5rem;
+}
+
+.page-title {
+    font-size: 2.25rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--epic8-primary), var(--epic8-secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.025em;
+}
+
+/* Dash Stats */
+.stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+}
+
+.stat-card {
+    padding: 1.75rem;
+}
+
+.stat-label {
+    color: #64748b;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+}
+
+.stat-value {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #1e293b;
+}
+
+/* Interactive Tables */
+.data-table-container {
+    overflow: hidden;
+    padding: 1rem;
+}
+
+.premium-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 0.75rem;
+}
+
+.premium-table th {
+    padding: 1rem 1.5rem;
+    text-align: left;
+    color: #64748b;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.premium-table tr {
+    background: rgba(255, 255, 255, 0.5);
+    transition: background 0.2s ease;
+}
+
+.premium-table tr:hover {
+    background: rgba(255, 255, 255, 0.8);
+}
+
+.premium-table td {
+    padding: 1.25rem 1.5rem;
+    border-top: 1px solid rgba(0,0,0,0.05);
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+.premium-table td:first-child {
+    border-left: 1px solid rgba(0,0,0,0.05);
+    border-top-left-radius: 1rem;
+    border-bottom-left-radius: 1rem;
+}
+
+.premium-table td:last-child {
+    border-right: 1px solid rgba(0,0,0,0.05);
+    border-top-right-radius: 1rem;
+    border-bottom-right-radius: 1rem;
+}
+
+/* Forms & Inputs */
+.premium-form {
+    display: grid;
+    gap: 1.5rem;
+    padding: 1rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #475569;
+}
+
+.premium-input {
+    width: 100%;
+    padding: 0.875rem 1.25rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 0.875rem;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    background: white;
+}
+
+.premium-input:focus {
+    outline: none;
+    border-color: var(--epic8-primary);
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+}
+
+/* Status Badges */
+.badge {
+    padding: 0.375rem 1rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.badge-active { background: #dcfce7; color: #166534; }
+.badge-pending { background: #fef9c3; color: #854d0e; }
+.badge-cancelled { background: #fee2e2; color: #991b1b; }
+
+/* Buttons */
+.btn-premium {
+    padding: 0.875rem 2rem;
+    border-radius: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--epic8-primary), var(--epic8-secondary));
+    color: white;
+}
+
+.btn-primary:hover {
+    filter: brightness(1.1);
+    transform: scale(1.02);
+}
+
+/* Settings List */
+.setting-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+.setting-info h4 {
+    margin: 0 0 0.25rem 0;
+    font-weight: 700;
+}
+
+.setting-info p {
+    margin: 0;
+    color: #64748b;
+    font-size: 0.875rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .hr-container { padding: 1rem; }
+    .page-title { font-size: 1.75rem; }
+    .page-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
+}

@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, Bell, Award, Flame, Zap, LogOut, ClipboardList, BarChart2, MessageSquare } from 'lucide-react';
+import { BookOpen, Bell, Award, Flame, Zap, LogOut, ClipboardList, BarChart2, MessageSquare, Megaphone, Pin } from 'lucide-react';
 import axiosInstance from '../../api/axiosInstance';
 import { useAuth } from '../../context/AuthContext';
 import '../../styles/student-portal.css';
+import { announcementApi } from '../../api/announcementApi';
 
 const StudentDashboard = () => {
   const [data, setData]           = useState(null);
   const [loading, setLoading]     = useState(true);
+  const [announcements, setAnnouncements] = useState([]);
   const [intUnread, setIntUnread] = useState(0);
   const navigate                  = useNavigate();
   const { user, logout }          = useAuth();
@@ -31,7 +33,22 @@ const StudentDashboard = () => {
     };
     fetchData();
     fetchUnread();
-  }, []);
+  }, [logout]);
+
+  useEffect(() => {
+    const fetchAnnouncements = async (batchId) => {
+        try {
+            const res = await announcementApi.getBatchAnnouncements(batchId);
+            setAnnouncements(res.announcements || []);
+        } catch (err) {
+            console.error('Failed to load announcements', err);
+        }
+    };
+
+    if (data?.batch_id) {
+        fetchAnnouncements(data.batch_id);
+    }
+  }, [data]);
 
   if (loading) return (
     <div className="student-portal-layout" style={{ justifyContent: 'center', alignItems: 'center' }}>
@@ -128,6 +145,38 @@ const StudentDashboard = () => {
           </h1>
           <p style={{ color: 'var(--gray-text)' }}>Here is what's happening in your academy journey.</p>
         </header>
+
+        {/* ── News Feed (US-TR-03) ── */}
+        {announcements.length > 0 && (
+          <div className="news-feed-container" style={{ marginBottom: 32 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+              <Megaphone size={20} color="var(--primary-blue)" />
+              <h2 style={{ fontSize: 20, margin: 0 }}>News & Updates</h2>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
+              {announcements.map(ann => (
+                <div key={ann.id} className="student-card" style={{ 
+                    margin: 0, 
+                    position: 'relative', 
+                    borderLeft: ann.is_pinned ? '4px solid #f59e0b' : '1px solid var(--gray-border)',
+                    background: ann.is_pinned ? '#fffbeb' : 'white'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                    <h3 style={{ fontSize: 16, fontWeight: 700, margin: 0, color: 'var(--navy-bg)' }}>
+                        {ann.is_pinned && <Pin size={12} style={{ display: 'inline', marginRight: 4 }} />}
+                        {ann.title}
+                    </h3>
+                  </div>
+                  <p style={{ fontSize: 13, color: '#4b5563', lineHeight: 1.6, marginBottom: 12 }}>{ann.content}</p>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--gray-text)', borderTop: '1px solid #f1f5f9', paddingTop: 8 }}>
+                    <span>By {ann.trainer_name}</span>
+                    <span>{new Date(ann.created_at).toLocaleDateString()}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* ── Certificate Banner (100% only) ── */}
         {intPct === 100 && data.certificate_available && (

@@ -26,6 +26,14 @@ import DiscussionForum from './pages/student/DiscussionForum';
 // HR & Admin Pages
 import CourseManagementPage from './pages/hr/CourseManagementPage';
 import StudentStatsPage from './pages/hr/StudentStatsPage';
+import AnalyticsDashboardPage from './pages/admin/AnalyticsDashboardPage';
+import SystemSettingsPage from './pages/admin/SystemSettingsPage';
+import EnrollmentsPage from './pages/hr/EnrollmentsPage';
+import BatchListPage from './pages/hr/BatchListPage';
+import CreateBatchPage from './pages/hr/CreateBatchPage';
+import BatchDetailPage from './pages/hr/BatchDetailPage';
+import ReportsPage from './pages/hr/AuditReportsPage';
+import TrainerPoolPage from './pages/hr/TrainerPoolPage';
 
 // Trainer Pages
 import CourseBuilderPage from './pages/trainer/CourseBuilderPage';
@@ -36,13 +44,15 @@ import LiveSessionPage from './pages/trainer/LiveSessionPage';
 
 import StaffDashboardPage from './pages/StaffDashboardPage';
 import BdaDashboardPage from './pages/bda/BdaDashboardPage';
+import TrainerDashboardPage from './pages/trainer/TrainerDashboardPage';
 
 const DashboardSwitcher = () => {
   const { user } = useAuth();
   if (user?.role === 'student') return <Navigate to="/student/dashboard" replace />;
   if (user?.role === 'bda') return <BdaDashboardPage />;
-  if (user?.role === 'hr') return <StudentStatsPage />;
-  if (user?.role === 'super_admin' || user?.role === 'trainer') return <StaffDashboardPage />;
+  if (user?.role === 'hr') return <Navigate to="/hr/enrollments" replace />;
+  if (user?.role === 'super_admin') return <Navigate to="/admin/analytics" replace />;
+  if (user?.role === 'trainer') return <StaffDashboardPage />;
   return (
     <div style={{ padding: '40px' }} className="premium-card">
       <h2 style={{ marginBottom: '16px' }}>Welcome to Acadeno LMS, {user?.email}</h2>
@@ -87,6 +97,19 @@ const App = () => {
                 <Route path="/hr/student-stats" element={<StudentStatsPage />} />
                 <Route path="/superadmin/student-stats" element={<StudentStatsPage />} />
                 <Route path="/hr/courses" element={<CourseManagementPage />} />
+                
+                {/* EPIC-08 Admin & HR */}
+                <Route path="/admin/analytics" element={<AnalyticsDashboardPage />} />
+                <Route path="/admin/settings" element={<SystemSettingsPage />} />
+                <Route path="/hr/enrollments" element={<EnrollmentsPage />} />
+                <Route path="/batches" element={<BatchListPage />} />
+                <Route path="/batches/new" element={<CreateBatchPage />} />
+                <Route path="/batches/:id" element={<BatchDetailPage />} />
+                <Route path="/hr/reports" element={<ReportsPage />} />
+                <Route path="/hr/trainers" element={<TrainerPoolPage />} />
+                
+                {/* EPIC-07 Trainer dashboard */}
+                <Route path="/trainer/dashboard" element={<TrainerDashboardPage />} />
                 
                 {/* Trainer EPIC-05 */}
                 <Route path="/trainer/course/:courseId" element={<CourseBuilderPage />} />

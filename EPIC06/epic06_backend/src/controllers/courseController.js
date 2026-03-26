@@ -1439,7 +1439,7 @@ async function getBatchDashboard(req, res) {
     // Published tasks for this batch
     const objTasksResult = await client.query(
       `SELECT id, title, due_date FROM tasks
-        WHERE batch_id = $1 AND status = 'published'`,
+        WHERE batch_id = $1 AND is_published = true`,
       [strBatchId]
     );
     const arrTasks     = objTasksResult.rows;
@@ -1597,7 +1597,7 @@ async function getBatchStudent(req, res) {
               ts.score, ts.feedback, ts.status AS submission_status, ts.submitted_at, ts.evaluated_at
          FROM tasks t
          LEFT JOIN task_submissions ts ON t.id = ts.task_id AND ts.student_id = $1
-        WHERE t.batch_id = $2 AND t.status = 'published'
+        WHERE t.batch_id = $2 AND t.is_published = true
         ORDER BY t.due_date ASC`,
       [strStudentUserId, strBatchId]
     );

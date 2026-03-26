@@ -19,6 +19,7 @@ async function getStudentDashboard(req, res) {
         s.registration_number,
         e.id as enrollment_id,
         e.status as enrollment_status,
+        e.batch_id,
         e.total_fee,
         c.name as course_name,
         b.name as batch_name

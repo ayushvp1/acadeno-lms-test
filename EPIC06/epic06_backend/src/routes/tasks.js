@@ -84,4 +84,22 @@ router.patch(
   ctrl.evaluateSubmission
 );
 
+// ---------------------------------------------------------------------------
+// PATCH /api/tasks/:taskId/submissions/:submissionId/reopen
+//   — trainer reopens a submission
+// ---------------------------------------------------------------------------
+router.patch(
+  '/:taskId/submissions/:submissionId/reopen',
+  ...authTrainer,
+  ctrl.reopenSubmission
+);
+
+// --- Analytics ---
+router.get('/:id/analytics', ...authTrainer, ctrl.getTaskAnalytics);
+
+// --- Quiz Questions ---
+router.get('/:taskId/questions', ...authAll, ctrl.getQuizQuestions);
+router.post('/:taskId/questions', ...authTrainer, ctrl.addQuizQuestion);
+router.delete('/:taskId/questions/:questionId', ...authTrainer, ctrl.deleteQuizQuestion);
+
 module.exports = router;

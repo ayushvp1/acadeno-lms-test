@@ -42,7 +42,7 @@ const STR_FRONTEND_URL           = process.env.FRONTEND_URL || 'http://localhost
 async function _sendRemindersForSession(client, objSession) {
   // Fetch all active students enrolled in this session's batch
   const objStudents = await client.query(
-    `SELECT u.email, u.name
+    `SELECT u.email, u.full_name as name
        FROM enrollments  e
        JOIN students     s ON e.student_id = s.id
        JOIN users        u ON s.user_id    = u.id

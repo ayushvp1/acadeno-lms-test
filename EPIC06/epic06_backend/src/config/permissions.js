@@ -22,13 +22,13 @@ const PERMISSIONS = {
     allowedPrefixes: ['/'], // Has access to everything natively
   },
   hr: {
-    allowedPrefixes: ['/users', '/reports', '/dashboard'],
+    allowedPrefixes: ['/users', '/reports', '/dashboard', '/api/student/notifications'],
   },
   bda: {
-    allowedPrefixes: ['/leads', '/students', '/dashboard'],
+    allowedPrefixes: ['/leads', '/students', '/dashboard', '/api/student/notifications'],
   },
   trainer: {
-    allowedPrefixes: ['/courses', '/tasks', '/students', '/dashboard'],
+    allowedPrefixes: ['/courses', '/tasks', '/students', '/dashboard', '/api/student/notifications'],
   },
   student: {
     // SRD BR-A03: Student allowed routes only

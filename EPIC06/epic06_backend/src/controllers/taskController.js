@@ -34,6 +34,16 @@ const STR_SUBMISSION_PREFIX       = 'submissions';
 const INT_MAX_SCORE_BOUND         = 100;
 const INT_MIN_SCORE_BOUND         = 0;
 
+const STR_SUB_STATUS_SUBMITTED    = 'submitted';
+const STR_SUB_STATUS_EVALUATED    = 'evaluated';
+const STR_SUB_STATUS_REOPEN       = 'reopen';
+
+const STR_TASK_TYPE_QUIZ          = 'quiz';
+const STR_TASK_TYPE_ASSIGNMENT    = 'assignment';
+const STR_TASK_TYPE_PROJECT       = 'project';
+
+const { createNotification, NOTIFICATION_TYPES } = require('../utils/notificationHelper');
+
 const ARR_VALID_SUBMISSION_MIMES  = [
   'application/pdf',
   'application/vnd.ms-powerpoint',
@@ -91,7 +101,7 @@ async function _isTrainerAssigned(client, strCourseId, strUserId) {
     `SELECT 1
        FROM batches
       WHERE course_id  = $1
-        AND trainer_id = (SELECT id FROM trainers WHERE user_id = $2 LIMIT 1)
+        AND trainer_id = $2
         AND is_active  = true
       LIMIT 1`,
     [strCourseId, strUserId]
@@ -218,7 +228,7 @@ async function createTask(req, res) {
         course_id,
         datDue,
         max_score || 100,
-        'assignment',
+        req.body.task_type || STR_TASK_TYPE_ASSIGNMENT,
         instructions,
         req.user.user_id,
         target_student_id || null,
@@ -468,17 +478,20 @@ async function submitTask(req, res) {
     // task_submissions.student_id references users(id) directly (per migration schema)
     const strStudentId = req.user.user_id;
 
-    // Check for duplicate submission
-    const objDuplicate = await client.query(
-      `SELECT id FROM task_submissions WHERE task_id = $1 AND student_id = $2`,
+    // Check for existing submission
+    const objExisting = await client.query(
+      `SELECT id, status FROM task_submissions WHERE task_id = $1 AND student_id = $2`,
       [strTaskId, strStudentId]
     );
 
-    if (objDuplicate.rows.length > 0) {
-      return res.status(409).json({
-        error: 'You have already submitted this task.',
-        code:  'ALREADY_SUBMITTED',
-      });
+    if (objExisting.rows.length > 0) {
+      const objOldSub = objExisting.rows[0];
+      if (objOldSub.status !== STR_SUB_STATUS_REOPEN) {
+        return res.status(409).json({
+          error: 'You have already submitted this task.',
+          code:  'ALREADY_SUBMITTED',
+        });
+      }
     }
 
     // Upload file if provided
@@ -495,22 +508,102 @@ async function submitTask(req, res) {
       strS3Key        = objUpload.key;
     }
 
-    const objResult = await client.query(
-      `INSERT INTO task_submissions
-         (task_id, student_id, file_url, s3_key, notes, grade, score, feedback, submitted_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
-       RETURNING *`,
-      [
-        strTaskId,
-        strStudentId,
-        strFileUrl,
-        strS3Key,
-        strNotes,
-        STR_GRADE_PENDING,
-        null,
-        null,
-      ]
-    );
+
+    // Auto-grading logic for quizzes
+    if (objTaskRow.task_type === STR_TASK_TYPE_QUIZ) {
+        const answers = req.body.answers; // Expected: { question_id: 'A', ... }
+        if (!answers || typeof answers !== 'object') {
+            return res.status(400).json({ error: 'Quiz answers are required.', code: 'MISSING_ANSWERS' });
+        }
+
+        const questionsRes = await client.query(
+            `SELECT id, correct_option, points FROM quiz_questions WHERE task_id = $1`,
+            [strTaskId]
+        );
+        const questions = questionsRes.rows;
+        
+        let calculatedScore = 0;
+        let totalPoints = 0;
+        
+        questions.forEach(q => {
+            totalPoints += q.points;
+            if (answers[q.id] === q.correct_option) {
+                calculatedScore += q.points;
+            }
+        });
+
+        // Normalize score to max_score
+        const finalScore = totalPoints > 0 ? Math.round((calculatedScore / totalPoints) * objTaskRow.max_score) : 0;
+        const finalGrade = finalScore >= (objTaskRow.max_score * 0.4) ? STR_GRADE_PASS : STR_GRADE_FAIL;
+
+        if (objExisting.rows.length > 0 && objExisting.rows[0].status === STR_SUB_STATUS_REOPEN) {
+            objResult = await client.query(
+                `UPDATE task_submissions
+                 SET response_text = $1,
+                     status = $2,
+                     grade = $3,
+                     score = $4,
+                     submitted_at = NOW(),
+                     evaluated_at = NOW(),
+                     updated_at = NOW()
+                 WHERE id = $5
+                 RETURNING *`,
+                [JSON.stringify(answers), STR_SUB_STATUS_EVALUATED, finalGrade, finalScore, objExisting.rows[0].id]
+            );
+        } else {
+            objResult = await client.query(
+                `INSERT INTO task_submissions (task_id, student_id, response_text, grade, score, status, submitted_at, evaluated_at)
+                 VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
+                 RETURNING *`,
+                [strTaskId, strStudentId, JSON.stringify(answers), finalGrade, finalScore, STR_SUB_STATUS_EVALUATED]
+            );
+        }
+    } else {
+        // ... (existing submission logic for assignments/projects)
+        if (objExisting.rows.length > 0 && objExisting.rows[0].status === STR_SUB_STATUS_REOPEN) {
+            // resubmit: update existing row
+            objResult = await client.query(
+                `UPDATE task_submissions
+                    SET file_url     = $1,
+                        s3_key       = $2,
+                        notes        = $3,
+                        status       = $4,
+                        grade        = $5,
+                        score        = $6,
+                        submitted_at = NOW(),
+                        updated_at   = NOW()
+                WHERE id = $7
+                RETURNING *`,
+                [
+                strFileUrl,
+                strS3Key,
+                strNotes,
+                STR_SUB_STATUS_SUBMITTED,
+                STR_GRADE_PENDING,
+                null,
+                objExisting.rows[0].id
+                ]
+            );
+        } else {
+            // fresh submission
+            objResult = await client.query(
+                `INSERT INTO task_submissions
+                (task_id, student_id, file_url, s3_key, notes, grade, score, status, submitted_at)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
+                RETURNING *`,
+                [
+                strTaskId,
+                strStudentId,
+                strFileUrl,
+                strS3Key,
+                strNotes,
+                STR_GRADE_PENDING,
+                null,
+                STR_SUB_STATUS_SUBMITTED
+                ]
+            );
+        }
+    }
 
     return res.status(201).json({ submission: objResult.rows[0] });
   } catch (err) {
@@ -607,14 +700,16 @@ async function evaluateSubmission(req, res) {
               feedback     = $3,
               evaluated_by = $4,
               evaluated_at = NOW(),
+              status       = $5,
               updated_at   = NOW()
-        WHERE id = $5
+        WHERE id = $6
        RETURNING *`,
       [
         grade,
         score !== undefined && score !== null ? Number(score) : null,
         feedback || null,
         req.user.user_id,
+        STR_SUB_STATUS_EVALUATED,
         strSubmissionId,
       ]
     );
@@ -673,7 +768,7 @@ async function listSubmissions(req, res) {
     // task_submissions.student_id references users(id) directly (per migration schema)
     const objResult = await client.query(
       `SELECT ts.*,
-              u.name  AS student_name,
+              u.full_name  AS student_name,
               u.email AS student_email
          FROM task_submissions ts
          JOIN users            u  ON ts.student_id = u.id
@@ -892,6 +987,252 @@ async function getMySubmission(req, res) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// reopenSubmission(req, res)
+// ---------------------------------------------------------------------------
+// PATCH /api/tasks/:taskId/submissions/:submissionId/reopen
+// Roles: trainer, super_admin
+//
+// Body: { reason }
+// Transitions submission status to 'reopen', clearing score/grade.
+// ---------------------------------------------------------------------------
+async function reopenSubmission(req, res) {
+  const { taskId, submissionId } = req.params;
+  const { reason } = req.body;
+
+  if (!reason || typeof reason !== 'string' || reason.trim() === '') {
+    return res.status(400).json({ error: 'A reason for reopening is required.', code: 'MISSING_REASON' });
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query("SET app.current_user_role = 'super_admin'");
+
+    // Fetch submission + task
+    const objSubmission = await client.query(
+      `SELECT ts.*, t.course_id, t.title as task_title
+         FROM task_submissions ts
+         JOIN tasks            t  ON ts.task_id = t.id
+        WHERE ts.id      = $1
+          AND ts.task_id = $2`,
+      [submissionId, taskId]
+    );
+
+    if (objSubmission.rows.length === 0) {
+      return res.status(404).json({ error: 'Submission not found.', code: 'SUBMISSION_NOT_FOUND' });
+    }
+
+    const objSub = objSubmission.rows[0];
+
+    // BR-C01 check
+    if (req.user.role === 'trainer') {
+      const isAssigned = await _isTrainerAssigned(client, objSub.course_id, req.user.user_id);
+      if (!isAssigned) {
+        return res.status(403).json({ error: 'You are not assigned to this course (BR-C01).', code: 'NOT_ASSIGNED' });
+      }
+    }
+
+    // AC: GIVEN status=submitted or evaluated
+    if (objSub.status === STR_SUB_STATUS_REOPEN) {
+      return res.status(400).json({ error: 'Submission is already in reopen state.', code: 'ALREADY_REOPEN' });
+    }
+
+    // Update submission
+    const objResult = await client.query(
+      `UPDATE task_submissions
+          SET status        = $1,
+              reopen_reason = $2,
+              grade         = $3,
+              score         = $4,
+              updated_at    = NOW()
+        WHERE id = $5
+       RETURNING *`,
+      [STR_SUB_STATUS_REOPEN, reason, STR_GRADE_PENDING, null, submissionId]
+    );
+
+    // Notification
+    try {
+      await createNotification(
+        objSub.student_id,
+        NOTIFICATION_TYPES.TASK_REOPENED,
+        'Task Reopened for Revision',
+        `Your submission for "${objSub.task_title}" has been reopened. Reason: ${reason}`,
+        taskId
+      );
+    } catch (notifErr) {
+      console.error('Failed to send reopen notification:', notifErr.message);
+    }
+
+    return res.json({ submission: objResult.rows[0] });
+  } catch (err) {
+    console.error('reopenSubmission error:', err.message);
+    return res.status(500).json({ error: 'Internal server error' });
+  } finally {
+    client.release();
+  }
+}
+
+// ---------------------------------------------------------------------------
+// getTaskAnalytics(req, res)
+// ---------------------------------------------------------------------------
+// GET /api/tasks/:id/analytics
+// Roles: trainer, super_admin, hr
+//
+// Calculates submission rates, averages, and score distributions for a task.
+// BR-C01: trainer restricted to their assigned courses.
+// ---------------------------------------------------------------------------
+async function getTaskAnalytics(req, res) {
+  const strTaskId = req.params.id;
+  if (!strTaskId) {
+    return res.status(400).json({ error: 'Task id is required.', code: 'MISSING_ID' });
+  }
+
+  const client = await pool.connect();
+
+  try {
+    await client.query("SET app.current_user_role = 'super_admin'");
+
+    // 1. Resolve task and verify ownership
+    const objTaskResult = await client.query(
+      `SELECT t.*, b.name as batch_name 
+         FROM tasks t 
+         JOIN batches b ON t.batch_id = b.id
+        WHERE t.id = $1`,
+      [strTaskId]
+    );
+
+    if (objTaskResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Task not found.', code: 'TASK_NOT_FOUND' });
+    }
+
+    const objTask = objTaskResult.rows[0];
+
+    // BR-C01: trainer assignment check
+    if (req.user.role === 'trainer') {
+      const isAssigned = await _isTrainerAssigned(client, objTask.course_id, req.user.user_id);
+      if (!isAssigned) {
+        return res.status(403).json({
+          error: 'You are not assigned to this course (BR-C01).',
+          code:  'NOT_ASSIGNED',
+        });
+      }
+    }
+
+    // 2. Fetch all students in the batch
+    const objStudentsResult = await client.query(
+      `SELECT s.id, u.full_name as name, u.email, u.id as user_id
+         FROM students s
+         JOIN enrollments e ON s.id = e.student_id
+         JOIN users u ON s.user_id = u.id
+        WHERE e.batch_id = $1 AND e.status = 'active'`,
+      [objTask.batch_id]
+    );
+
+    const arrStudents = objStudentsResult.rows;
+    const intTotalStudents = arrStudents.length;
+
+    // 3. Fetch all submissions for this task
+    const objSubmissionsResult = await client.query(
+      `SELECT ts.*, u.full_name as student_name
+         FROM task_submissions ts
+         JOIN users u ON ts.student_id = u.id
+        WHERE ts.task_id = $1`,
+      [strTaskId]
+    );
+
+    const arrSubmissions = objSubmissionsResult.rows;
+    const objSubMap = {};
+    arrSubmissions.forEach(sub => {
+       objSubMap[sub.student_id] = sub;
+    });
+
+    // 4. Calculate Stats
+    let intSubmittedCount = 0;
+    let intEvaluatedCount = 0;
+    let intPendingCount   = 0;
+    let intReopenCount    = 0;
+    let numTotalScore     = 0;
+    
+    // Score distribution buckets
+    const objDistribution = {
+        '0-20%': 0,
+        '21-40%': 0,
+        '41-60%': 0,
+        '61-80%': 0,
+        '81-100%': 0
+    };
+
+    const datNow = new Date();
+    const datDue = new Date(objTask.due_date);
+    const boolIsOverdue = datNow > datDue;
+
+    const arrRoster = arrStudents.map(student => {
+        const objSub = objSubMap[student.user_id];
+        let strStatus = objSub ? objSub.status : 'pending';
+        let boolOverdue = !objSub && boolIsOverdue;
+
+        if (strStatus === 'submitted') intSubmittedCount++;
+        if (strStatus === 'evaluated') {
+            intSubmittedCount++;
+            intEvaluatedCount++;
+            if (objSub.score !== null) {
+                numTotalScore += Number(objSub.score);
+                // Distribution
+                const pct = (objSub.score / objTask.max_score) * 100;
+                if (pct <= 20) objDistribution['0-20%']++;
+                else if (pct <= 40) objDistribution['21-40%']++;
+                else if (pct <= 60) objDistribution['41-60%']++;
+                else if (pct <= 80) objDistribution['61-80%']++;
+                else objDistribution['81-100%']++;
+            }
+        }
+        if (strStatus === 'pending') intPendingCount++;
+        if (strStatus === 'reopen') intReopenCount++;
+
+        return {
+            student_id: student.id,
+            user_id: student.user_id,
+            name: student.name,
+            email: student.email,
+            status: strStatus,
+            score: objSub ? objSub.score : null,
+            is_overdue: boolOverdue,
+            submission_id: objSub ? objSub.id : null
+        };
+    });
+
+    const numAverageScore = intEvaluatedCount > 0 ? (numTotalScore / intEvaluatedCount).toFixed(2) : 0;
+    const numSubmissionRate = intTotalStudents > 0 ? ((intSubmittedCount / intTotalStudents) * 100).toFixed(2) : 0;
+
+    return res.json({
+        task: {
+            id: objTask.id,
+            title: objTask.title,
+            due_date: objTask.due_date,
+            max_score: objTask.max_score,
+            batch_name: objTask.batch_name
+        },
+        stats: {
+            total_students: intTotalStudents,
+            submitted_count: intSubmittedCount,
+            evaluated_count: intEvaluatedCount,
+            pending_count: intPendingCount,
+            reopen_count: intReopenCount,
+            submission_rate: parseFloat(numSubmissionRate),
+            average_score: parseFloat(numAverageScore),
+            score_distribution: objDistribution
+        },
+        roster: arrRoster
+    });
+
+  } catch (err) {
+    console.error('getTaskAnalytics error:', err.message);
+    return res.status(500).json({ error: 'Internal server error' });
+  } finally {
+    client.release();
+  }
+}
+
 // ===========================================================================
 // Exports
 // ===========================================================================
@@ -906,4 +1247,55 @@ module.exports = {
   evaluateSubmission,
   listSubmissions,
   getMySubmission,
+  reopenSubmission,
+  getTaskAnalytics,
+  // Quiz Question Management
+  addQuizQuestion: async (req, res) => {
+    const { taskId } = req.params;
+    const { question_text, option_a, option_b, option_c, option_d, correct_option, points } = req.body;
+    const client = await pool.connect();
+    try {
+        await client.query("SET app.current_user_role = 'super_admin'");
+        const result = await client.query(
+            `INSERT INTO quiz_questions (task_id, question_text, option_a, option_b, option_c, option_d, correct_option, points)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+            [taskId, question_text, option_a, option_b, option_c, option_d, correct_option, points || 1]
+        );
+        res.status(201).json({ question: result.rows[0] });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    } finally {
+        client.release();
+    }
+  },
+  getQuizQuestions: async (req, res) => {
+    const { taskId } = req.params;
+    const client = await pool.connect();
+    try {
+        await client.query("SET app.current_user_role = 'super_admin'");
+        const result = await client.query(
+            `SELECT id, question_text, option_a, option_b, option_c, option_d, points ${req.user.role === 'student' ? '' : ', correct_option'}
+             FROM quiz_questions WHERE task_id = $1 ORDER BY created_at ASC`,
+            [taskId]
+        );
+        res.json({ questions: result.rows });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    } finally {
+        client.release();
+    }
+  },
+  deleteQuizQuestion: async (req, res) => {
+    const { taskId, questionId } = req.params;
+    const client = await pool.connect();
+    try {
+        await client.query("SET app.current_user_role = 'super_admin'");
+        await client.query(`DELETE FROM quiz_questions WHERE id = $1 AND task_id = $2`, [questionId, taskId]);
+        res.json({ message: 'Question deleted' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    } finally {
+        client.release();
+    }
+  }
 };

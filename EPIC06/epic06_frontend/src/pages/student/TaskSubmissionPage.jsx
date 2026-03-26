@@ -12,7 +12,7 @@ function deriveStatus(objTaskItem) {
   if (!objSub) {
     return objTaskItem.task.is_overdue ? 'overdue' : 'not_submitted';
   }
-  return objSub.status; // 'submitted' | 'evaluated' | 'reopened'
+  return objSub.status; // 'submitted' | 'evaluated' | 'reopen'
 }
 
 // ── Status icon helper ─────────────────────────────────────────────────────
@@ -20,7 +20,7 @@ function StatusIcon({ strStatus }) {
   if (strStatus === 'evaluated')    return <CheckCircle size={14} color="var(--success)" />;
   if (strStatus === 'submitted')    return <Clock size={14} color="#2563eb" />;
   if (strStatus === 'overdue')      return <AlertCircle size={14} color="var(--error)" />;
-  if (strStatus === 'reopened')     return <RotateCcw size={14} color="#f59e0b" />;
+  if (strStatus === 'reopen')       return <RotateCcw size={14} color="#f59e0b" />;
   return null;
 }
 
@@ -32,6 +32,8 @@ const TaskSubmissionPage = () => {
   const [boolLoading,    setBoolLoading]    = useState(true);
   const [boolSubmitting, setBoolSubmitting] = useState(false);
   const [strError,       setStrError]       = useState(null);
+  const [quizQuestions, setQuizQuestions]   = useState([]);
+  const [quizAnswers,   setQuizAnswers]     = useState({}); // { questionId: selectedOption }
   const navigate = useNavigate();
   const { logout } = useAuth();
 
@@ -61,6 +63,14 @@ const TaskSubmissionPage = () => {
       const res = await axiosInstance.get(`/api/student/tasks/${strTaskId}`);
       setObjDetail(res.data);
       setStrResponseTxt(res.data.student_submission?.response_text || '');
+      
+      if (res.data.task_type === 'quiz') {
+        const qRes = await axiosInstance.get(`/api/tasks/${strTaskId}/questions`);
+        setQuizQuestions(qRes.data.questions || []);
+        // If already submitted, we might want to show their answers, 
+        // but current backend stores raw response_text if it was a quiz?
+        // Actually, submitTask for quiz expects { answers: { qId: option } }
+      }
     } catch (err) {
       console.error('Failed to load task detail', err);
     }
@@ -73,14 +83,21 @@ const TaskSubmissionPage = () => {
     setBoolSubmitting(true);
     setStrError(null);
 
-    const formData = new FormData();
-    formData.append('response_text', strResponseTxt);
-    if (objFile) formData.append('file', objFile);
+    let payload;
+    let headers = {};
+
+    if (objDetail.task_type === 'quiz') {
+      payload = { answers: quizAnswers };
+      headers = { 'Content-Type': 'application/json' };
+    } else {
+      payload = new FormData();
+      payload.append('response_text', strResponseTxt);
+      if (objFile) payload.append('file', objFile);
+      headers = { 'Content-Type': 'multipart/form-data' };
+    }
 
     try {
-      await axiosInstance.post(`/api/student/tasks/${objDetail.id}/submit`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      await axiosInstance.post(`/api/student/tasks/${objDetail.id}/submit`, payload, { headers });
       alert('Task submitted successfully! ✅');
       await fetchTaskList();
       await loadDetail(objDetail.id);
@@ -205,7 +222,19 @@ const TaskSubmissionPage = () => {
                   </div>
                 )}
 
-                {/* ── Evaluation Result (if graded) ── */}
+                {/* Trainer Reopen Feedback */}
+                {objSub?.status === 'reopen' && (
+                  <div className="alert alert-warning" style={{ marginBottom: 24, background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 12, padding: 16 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#92400e', fontWeight: 800, marginBottom: 8, textTransform: 'uppercase', fontSize: 12 }}>
+                      <RotateCcw size={16} /> Reopen for Revision
+                    </div>
+                    <p style={{ color: '#78350f', fontSize: 14 }}>
+                      <strong>Trainer Feedback:</strong> {objSub.reopen_reason}
+                    </p>
+                  </div>
+                )}
+
+                {/* Evaluation Result (if graded) */}
                 {objSub?.status === 'evaluated' && (
                   <div className="cert-banner" style={{ background: 'var(--navy-bg)', marginBottom: 24 }}>
                     <div>
@@ -233,47 +262,93 @@ const TaskSubmissionPage = () => {
                   </div>
                 )}
 
-                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                  <textarea
-                    className="auth-input"
-                    style={{ minHeight: 150, resize: 'vertical', fontFamily: 'inherit' }}
-                    placeholder="Type your response here…"
-                    value={strResponseTxt}
-                    onChange={(e) => setStrResponseTxt(e.target.value)}
-                    disabled={boolLocked}
-                    required
-                  />
-
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    <label style={{ fontSize: 14, fontWeight: 500 }}>Upload File (Optional)</label>
-                    <input
-                      type="file"
-                      onChange={(e) => setObjFile(e.target.files[0])}
-                      disabled={boolLocked}
-                      className="auth-input"
-                    />
-                    {objSub?.s3_key && (
-                      <span style={{ fontSize: 12, color: 'var(--gray-text)' }}>
-                        Previously uploaded: {objSub.s3_key}
-                      </span>
+                {objDetail.task_type === 'quiz' ? (
+                  <div className="quiz-container" style={{ marginTop: 24 }}>
+                    {quizQuestions.map((q, idx) => (
+                      <div key={q.id} className="student-card" style={{ marginBottom: 16, border: '1px solid var(--gray-border)', boxShadow: 'none' }}>
+                        <p style={{ fontWeight: 700, marginBottom: 12 }}>{idx + 1}. {q.question_text}</p>
+                        <div style={{ display: 'grid', gap: 10 }}>
+                          {['A', 'B', 'C', 'D'].map(opt => {
+                            const optKey = `option_${opt.toLowerCase()}`;
+                            const isSelected = quizAnswers[q.id] === opt;
+                            return (
+                              <button
+                                key={opt}
+                                type="button"
+                                onClick={() => !boolLocked && setQuizAnswers({ ...quizAnswers, [q.id]: opt })}
+                                style={{
+                                  textAlign: 'left',
+                                  padding: '12px 16px',
+                                  borderRadius: 8,
+                                  border: isSelected ? '2px solid var(--primary-blue)' : '1px solid var(--gray-border)',
+                                  background: isSelected ? '#eff6ff' : 'white',
+                                  cursor: boolLocked ? 'default' : 'pointer',
+                                  fontSize: 14,
+                                  transition: 'all 0.2s'
+                                }}
+                              >
+                                <strong>{opt}:</strong> {q[optKey]}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                    
+                    {!boolLocked && (
+                      <button
+                        onClick={handleSubmit}
+                        className="btn-primary"
+                        style={{ width: 200, marginTop: 16 }}
+                        disabled={boolSubmitting || Object.keys(quizAnswers).length < quizQuestions.length}
+                      >
+                        {boolSubmitting ? 'Evaluating…' : 'Submit Quiz'}
+                      </button>
                     )}
                   </div>
+                ) : (
+                  <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                    <textarea
+                      className="auth-input"
+                      style={{ minHeight: 150, resize: 'vertical', fontFamily: 'inherit' }}
+                      placeholder="Type your response here…"
+                      value={strResponseTxt}
+                      onChange={(e) => setStrResponseTxt(e.target.value)}
+                      disabled={boolLocked}
+                      required
+                    />
 
-                  {!boolLocked ? (
-                    <button
-                      type="submit"
-                      className="btn-primary"
-                      style={{ width: 200, alignSelf: 'flex-start' }}
-                      disabled={boolSubmitting}
-                    >
-                      {boolSubmitting ? 'Submitting…' : 'Submit Task'}
-                    </button>
-                  ) : (
-                    <div style={{ color: 'var(--gray-text)', fontStyle: 'italic', fontSize: 14 }}>
-                      {objSub.status === 'evaluated' ? 'Task has been evaluated.' : 'Task is locked — awaiting evaluation.'}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      <label style={{ fontSize: 14, fontWeight: 500 }}>Upload File (Optional)</label>
+                      <input
+                        type="file"
+                        onChange={(e) => setObjFile(e.target.files[0])}
+                        disabled={boolLocked}
+                        className="auth-input"
+                      />
+                      {objSub?.s3_key && (
+                        <span style={{ fontSize: 12, color: 'var(--gray-text)' }}>
+                          Previously uploaded: {objSub.s3_key}
+                        </span>
+                      )}
                     </div>
-                  )}
-                </form>
+
+                    {!boolLocked ? (
+                      <button
+                        type="submit"
+                        className="btn-primary"
+                        style={{ width: 200, alignSelf: 'flex-start' }}
+                        disabled={boolSubmitting}
+                      >
+                        {boolSubmitting ? 'Submitting…' : 'Submit Task'}
+                      </button>
+                    ) : (
+                      <div style={{ color: 'var(--gray-text)', fontStyle: 'italic', fontSize: 14 }}>
+                        {objSub.status === 'evaluated' ? 'Task has been evaluated.' : 'Task is locked — awaiting evaluation.'}
+                      </div>
+                    )}
+                  </form>
+                )}
               </div>
             )}
           </div>

@@ -27,6 +27,10 @@ const taskRoutes         = require('./routes/tasks');        // EPIC-05 task lif
 const analyticsRoutes    = require('./routes/analytics');    // EPIC-05 analytics
 const pincodeRoutes      = require('./routes/pincode');
 const discussionsRoutes  = require('./routes/discussions');  // EPIC-06 US-STU-09
+const adminRoutes        = require('./routes/admin');        // EPIC-08 Admin
+const hrRoutes           = require('./routes/hr');           // EPIC-08 HR
+const batchRoutes        = require('./routes/batches');      // EPIC-08 Batches
+const announcementRoutes = require('./routes/announcements'); // US-TR-03
 
 const app = express();
 
@@ -79,6 +83,12 @@ app.use('/api/pincode', pincodeRoutes);
 
 // Discussion Forum (EPIC-06 US-STU-09)
 app.use('/api/discussions', discussionsRoutes);
+
+// Admin & HR Modules (EPIC-08)
+app.use('/api/admin',   adminRoutes);
+app.use('/api/hr',      hrRoutes);
+app.use('/api/batches', batchRoutes);
+app.use('/api/announcements', announcementRoutes);
 
 // ---------------------------------------------------------------------------
 // 3. SYSTEM HEALTH

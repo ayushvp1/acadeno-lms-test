@@ -377,6 +377,44 @@ async function sendDiscussionReplyEmail(toEmail, studentName, postTitle, replyBo
   });
 }
 
+// ---------------------------------------------------------------------------
+// sendBatchAssignmentEmail (US-TR-08)
+// ---------------------------------------------------------------------------
+// Business intent: Notify a trainer when they are assigned to a new batch.
+// Includes critical dates, schedules, and a direct dashboard link.
+// ---------------------------------------------------------------------------
+async function sendBatchAssignmentEmail({ toEmail, trainerName, batchName, courseName, startDate, schedule, studentCount, dashboardUrl }) {
+  await transporter.sendMail({
+    from:    process.env.EMAIL_FROM,
+    to:      toEmail,
+    subject: `New Batch Assigned: ${batchName} — Acadeno LMS`,
+    text: `Hi ${trainerName},\n\nYou have been assigned to a new batch: "${batchName}" for "${courseName}".\n\nStart Date: ${startDate}\nSchedule: ${schedule}\nEnrolled Students: ${studentCount}\n\nYou can access the batch dashboard here:\n${dashboardUrl}\n\nGood luck with your new sessions!\nThe Acadeno Team`,
+    html: `
+      <div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;padding:24px;border:1px solid #2563eb;border-radius:12px">
+        <h2 style="color:#2563eb;margin-bottom:8px">New Batch Assignment</h2>
+        <p style="color:#475569">Hi <strong>${trainerName}</strong>,</p>
+        <p style="color:#475569">You have been assigned to a new responsibilty as a trainer for the following batch:</p>
+        
+        <table style="width:100%;border-collapse:collapse;margin:16px 0;background:#f8fafc;border-radius:8px;overflow:hidden">
+          <tr><td style="padding:12px;color:#64748b;border-bottom:1px solid #e2e8f0">Batch Name</td><td style="padding:12px;font-weight:700;color:#1e293b;border-bottom:1px solid #e2e8f0">${batchName}</td></tr>
+          <tr><td style="padding:12px;color:#64748b;border-bottom:1px solid #e2e8f0">Course</td><td style="padding:12px;font-weight:600;color:#1e293b;border-bottom:1px solid #e2e8f0">${courseName}</td></tr>
+          <tr><td style="padding:12px;color:#64748b;border-bottom:1px solid #e2e8f0">Start Date</td><td style="padding:12px;font-weight:600;color:#1e293b;border-bottom:1px solid #e2e8f0">${startDate}</td></tr>
+          <tr><td style="padding:12px;color:#64748b;border-bottom:1px solid #e2e8f0">Schedule</td><td style="padding:12px;font-weight:600;color:#1e293b;border-bottom:1px solid #e2e8f0">${schedule}</td></tr>
+          <tr><td style="padding:12px;color:#64748b">Students</td><td style="padding:12px;font-weight:600;color:#1e293b">${studentCount}</td></tr>
+        </table>
+
+        <div style="text-align:center;margin:24px 0">
+           <a href="${dashboardUrl}" style="padding:12px 28px;background:#2563eb;color:#fff;text-decoration:none;border-radius:6px;font-weight:700">
+             Open Batch Dashboard
+           </a>
+        </div>
+        
+        <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0">
+        <p style="color:#94a3b8;font-size:12px">Acadeno Learning Management System</p>
+      </div>`,
+  });
+}
+
 module.exports = {
   sendOTPEmail,
   sendLockoutEmail,
@@ -393,4 +431,6 @@ module.exports = {
   // EPIC-06
   sendCertificateEmail,
   sendDiscussionReplyEmail,
+  // US-TR-08
+  sendBatchAssignmentEmail,
 };

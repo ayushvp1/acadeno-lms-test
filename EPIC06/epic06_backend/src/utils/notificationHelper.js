@@ -23,6 +23,8 @@ const NOTIFICATION_TYPES = Object.freeze({
   DISCUSSION_REPLY:  'discussion_reply',
   TASK_EVALUATED:    'task_evaluated',
   CERTIFICATE_READY: 'certificate_ready',
+  TASK_REOPENED:     'task_reopened',
+  BATCH_ASSIGNED:    'batch_assigned',
 });
 
 // ---------------------------------------------------------------------------

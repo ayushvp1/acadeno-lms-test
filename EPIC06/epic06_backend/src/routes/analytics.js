@@ -31,13 +31,27 @@ router.get('/batches/:batchId',
 );
 
 /**
+ * GET /api/analytics/batches/:batchId/export
+ * Exports batch performance report as CSV or PDF (Staff)
+ */
+router.get('/batches/:batchId/export',
+    authenticate,
+    requireRole(...STAFF_ROLES),
+    analyticsController.exportBatchPerformanceReport
+);
+
+/**
  * GET /api/analytics/students/:studentId
  * Returns individual student stats and trends (Staff)
  */
-router.get('/students/:studentId', 
-    authenticate, 
-    requireRole(...STAFF_ROLES), 
-    analyticsController.getStudentStats
+/**
+ * GET /api/analytics/students/:studentId/timeline
+ * Returns chronological activity timeline for a student (Staff)
+ */
+router.get('/students/:studentId/timeline',
+    authenticate,
+    requireRole(...STAFF_ROLES),
+    analyticsController.getStudentTimeline
 );
 
 module.exports = router;

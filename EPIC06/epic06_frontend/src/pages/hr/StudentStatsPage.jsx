@@ -89,8 +89,8 @@ const StudentStatsPage = () => {
 
     return (
         <div className="epic05-container">
-            <header className="premium-header">
-                <div>
+            <header className="premium-header" style={{ alignItems: 'flex-start', flexWrap: 'wrap', gap: '2rem' }}>
+                <div style={{ flex: 1, minWidth: '300px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--indigo-primary)', marginBottom: '0.5rem', fontWeight: 600 }}>
                         <Activity size={18} />
                         <span>Performance Intelligence</span>
@@ -98,7 +98,8 @@ const StudentStatsPage = () => {
                     <h1>Student Capability Index</h1>
                     <p>Monitor learning trajectories and task completion across the platform</p>
                 </div>
-                <div style={{ display: 'flex', gap: '1rem' }}>
+                
+                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginTop: '1rem' }}>
                     <div className="search-box-premium">
                         <Search size={18} />
                         <input 
